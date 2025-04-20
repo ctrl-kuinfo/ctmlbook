@@ -14,10 +14,10 @@
 - 出版社　森北出版  
 - 出版年　2025年
 - ISBN　  
-- サポートページ [https://cst4L.github.io/](https://cst4L.github.io/) 
+- サポートページ [https://sct4L.github.io/](https://sct4L.github.io/) 
 - 引用情報  
 > 加嶋 健司，統計的学習のためのシステム制御理論，森北出版，2025  
-> Kenji Kashima, *Control Systems Theory for Statistical Learning*, Morikita Publishing Co., Ltd., 2025
+> Kenji Kashima, *Systems Control Theory for Statistical Learning*, Morikita Publishing Co., Ltd., 2025
 
 <img src="./lab.png" width="300">
 <!-- ![fig](./lab.png) -->
