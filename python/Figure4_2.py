@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2023/03/11
+# Date  : 2025/04/01
 # Note  : pip install control
 
 import control as ctl
@@ -58,7 +58,7 @@ def figure4_2(n_k:int = 800, T_c:float=0.01):
     x_k = x0
     for k in range(n_k):
         y[k] = float(Cd @ x_k)
-        u[k] = np.floor((y[k] + d/2) / d) * d
+        u[k] = np.floor((y[k] + d/2) / d) * d   # nearest grid to y[k] 
         x_k = Ad @ x_k + Bd * u[k]
     ax[1].stairs(u,label=r'$u_k$',linewidth=1.0, color = [0.7,0.7,0.7],zorder=10)
     ax[1].stairs(y,label=r'$y_k$',linewidth=1.0, color = 'black',zorder=10)

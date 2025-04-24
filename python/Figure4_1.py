@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2023/03/11
+# Date  : 2025/04/01
 # Note  : pip install control
 
 import numpy as np
