@@ -29,7 +29,6 @@ def phi_real(x:float)->float:
     '''
     return 2*np.sin(5*x)
 
-
 def figure7_4(n_data:int=30, n_x:int=100):
     '''
         n_sample - number of data

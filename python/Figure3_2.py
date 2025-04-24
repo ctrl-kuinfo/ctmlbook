@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/02/11
+# Date  : 2025/04/01
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,7 +49,7 @@ def figure3_2b(n_k:int=50,n_sample:int=10):
         # number in the interval (0,1).
         for k in range(n_k-1):
              rand = np.random.rand()
-             x[k+1] =  x[k] + 0.1*(x[k]-x[k]**3) + 0.5*(rand*2-1.0)*(1-np.abs(x[k])) 
+             x[k+1] =  x[k] + 0.1*(x[k]-x[k]**3) + (rand-0.5)*(1-np.abs(x[k])) 
         plt.plot(x,linewidth=2)
     plt.xlim([0,n_k-1])
     plt.ylim([-1,1])

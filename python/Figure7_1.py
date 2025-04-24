@@ -89,14 +89,14 @@ def figure7_1b(n_x:int = 100, n_sample:int=20, n_data:int=8):
     X = np.zeros([10,n_x]) 
     for i in range(n_x):
         X[:,i] = phi(x[i]) 
-    sigma = [0.3,100,10**(-6)]  # hyper parameters
+    sigma = [0.25,100,10**(-6)]  # hyper parameters
     mu,Sigma,x_s,y_s = learn_theta(sigma,n_data)
 
     plt.figure(figsize=figsize)
 
-    plt.plot(x, (mu[:,0] @ X).flatten(), linewidth= 2,label=r'$\sigma=0.3$',zorder=10)
-    plt.plot(x, (mu[:,1] @ X).flatten(), linewidth= 2,label=r'$\sigma=10^2$')
-    plt.plot(x, (mu[:,2] @ X).flatten(), linewidth= 2,label=r'$\sigma=10^{-6}$')
+    plt.plot(x, (mu[:,0] @ X).flatten(), linewidth= 2,label=r'$\sigma=0.5$',zorder=10)
+    plt.plot(x, (mu[:,1] @ X).flatten(), linewidth= 2,label=r'$\sigma=10$')
+    plt.plot(x, (mu[:,2] @ X).flatten(), linewidth= 2,label=r'$\sigma=10^{-3}$')
 
     for i in range (n_sample):
         theta = np.random.multivariate_normal(mu[:,0],Sigma[:,0:10])      
