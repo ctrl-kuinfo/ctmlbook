@@ -1,3 +1,7 @@
+# Author: Kenji Kashima
+# Date  : 2025/04/01
+# Note  : pip install cvxpy
+
 import numpy as np
 import matplotlib.pyplot as plt
 from cvxpy import Variable, Minimize, quad_form, Problem
