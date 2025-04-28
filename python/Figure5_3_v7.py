@@ -1,3 +1,7 @@
+# Author: Kenji Kashima
+# Date  : 2025/04/01
+# Note  : pip install control
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -48,7 +52,7 @@ def lqr_control(A, B_u, Q, R, Qf, k_bar):
     return K, Sigma
 
 
-def simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=None):
+def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=None):
     """
     Simulate LQG controller using Algorithm 1 order
     Records true state, state estimates, inputs, measurements, and covariance
@@ -56,6 +60,7 @@ def simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=No
     Parameters
     ----------
     A, B_u, B_v, C : system matrices
+    Sigma          : Inistial covariance
     K              : list of finite-horizon LQR gains K[k]
     k_bar          : horizon length
     x0             : initial state vector
@@ -70,6 +75,8 @@ def simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=No
     u      : control inputs         (k_bar,)
     y      : measurements           (k_bar,)
     Sigmas : covariance matrices    (nx x nx x (k_bar+1))
+    x_check: corrected state estimates        (nx x (k_bar))
+    Sigmac : corrected covariance matrices    (nx x nx x (k_bar))
     """
     nx = A.shape[0]
 
@@ -82,13 +89,14 @@ def simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=No
     x_true  = np.zeros((nx, k_bar + 1))
     x_hat   = np.zeros((nx, k_bar + 1))
     Sigmas  = np.zeros((nx, nx, k_bar + 1))
+    x_check = np.zeros((nx, k_bar))
+    Sigmac  = np.zeros((nx, nx, k_bar))
     u       = np.zeros(k_bar)
     y       = np.zeros(k_bar)
 
     # Initial conditions
     x_true[:, 0] = x0
     x_hat[:, 0]  = np.zeros(nx)
-    Sigma        = np.eye(nx)  # initial covariance
     Sigmas[:, :, 0] = Sigma
 
     # Main loop over time steps
@@ -111,24 +119,25 @@ def simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=No
 
             # 3) Posterior update of state estimate x̌_k
             innov    = y[k] - C @ x_hat[:, k]
-            x_check  = x_hat[:, k] + H_check.flatten() * innov
+            x_check[:, k]  = x_hat[:, k] + H_check.flatten() * innov
 
             # 4) Posterior covariance Σ̌_k
             Sigma_check = Sigma - L_check @ np.linalg.inv(M_tilde) @ L_check.T
+            Sigmac[:, :, k] = Sigma_check
 
             # Choose input using updated estimate for LQG
             if mode == 'lqg':
-                u[k] = -K[k] @ x_check
+                u[k] = -K[k] @ x_check[:, k]
 
             # 5) Time update (prior for next step)
-            x_hat[:, k+1] = (A @ x_check.reshape(nx,1) + B_u * u[k]).flatten()
+            x_hat[:, k+1] = (A @ x_check[:,k].reshape(nx,1) + B_u * u[k]).flatten()
             Sigma = A @ Sigma_check @ A.T + Rv * np.eye(nx)
 
         # 6) Propagate true system
         x_true[:, k+1] = (A @ x_true[:, k].reshape(nx,1) + B_u * u[k] + B_v * v[k]).flatten()
         Sigmas[:, :, k+1] = Sigma
-
-    return x_true, x_hat, u, y, Sigmas
+        
+    return x_true, x_hat, u, y, Sigmas, x_check, Sigmac
 
 
 def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
@@ -139,61 +148,95 @@ def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
     plt.plot(t, x_true[2], 'b', label='$(x_k)_3$ (LQG)')
     sd = np.sqrt(Sigmas[2, 2])
     plt.fill_between(t, x_true[2] - sd, x_true[2] + sd, color='blue', alpha=0.2)
+
     plt.xlabel('$k$')
     plt.legend()
     plt.grid()
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
+
+    plt.tight_layout()
+    plt.savefig("./figures/Figure5_3a.pdf")
     plt.show()
 
-def figure5_3b(x_true, x_hat, y, Sigmas, k_bar):
+def figure5_3b(x_true, x_hat, y, Sigmas, x_check, Sigmac, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
+    t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
     plt.plot(t, x_true[0], 'b', label='True $(x_k)_1$')
-    plt.plot(t[1:], y, 'r', label='Measurements $y_k$')
+    plt.plot(t_c, y, 'r', label='Measurements $y_k$')
     plt.plot(t, x_hat[0], 'b--', label='Estimate $(\hat x_k)_1$')
     sd = np.sqrt(Sigmas[0, 0])
     plt.fill_between(t, x_hat[0] - sd, x_hat[0] + sd, color='blue', alpha=0.2)
+
+    ##  Plot corrected estimate
+    # sd_c = np.sqrt(Sigmac[0, 0])
+    # plt.plot(t_c, x_check[0], 'r--', label='Corrected estimate $(\check x_k)_1$')
+    # plt.fill_between(t_c, x_check[0] - sd_c, x_check[0] + sd_c, color='red', alpha=0.2)
+
     plt.xlabel('$k$')
     plt.legend(loc='upper right')
     plt.grid()
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
+
+    plt.tight_layout()
+    plt.savefig("./figures/Figure5_3b.pdf")
     plt.show()
 
-def figure5_3c(x_true, x_hat, Sigmas, k_bar):
+def figure5_3c(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
+    t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
     plt.plot(t, x_true[1], 'b', label='True $(x_k)_2$')
     plt.plot(t, x_hat[1], 'b--', label='Estimate $(\hat x_k)_2$')
     sd = np.sqrt(Sigmas[1, 1])
     plt.fill_between(t, x_hat[1] - sd, x_hat[1] + sd, color='blue', alpha=0.2)
+
+    ## Plot corrected estimate
+    # sd_c = np.sqrt(Sigmac[1, 1])
+    # plt.plot(t_c, x_check[1], 'r', label='Corrected estimate $(\check x_k)_2$')
+    # plt.fill_between(t_c, x_check[1] - sd_c, x_check[1] + sd_c, color='red', alpha=0.2)
+
     plt.xlabel('$k$')
     plt.legend()
     plt.grid()
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
+
+    plt.tight_layout()
+    plt.savefig("./figures/Figure5_3c.pdf")
     plt.show()
 
-def figure5_3d(x_true, x_hat, Sigmas, k_bar):
+def figure5_3d(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
+    t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
     plt.plot(t, x_true[2], 'b', label='True $(x_k)_3$')
     plt.plot(t, x_hat[2], 'b--', label='Estimate $(\hat x_k)_3$')
     sd = np.sqrt(Sigmas[2, 2])
     plt.fill_between(t, x_hat[2] - sd, x_hat[2] + sd, color='blue', alpha=0.2)
+
+    ## Plot corrected estimate
+    # sd_c = np.sqrt(Sigmac[2, 2])
+    # plt.plot(t_c, x_check[2], 'r', label='Corrected estimate $(\check x_k)_3$')
+    # plt.fill_between(t_c, x_check[2] - sd_c, x_check[2] + sd_c, color='red', alpha=0.2)
+
     plt.xlabel('$k$')
     plt.legend()
     plt.grid()
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
+
+    plt.tight_layout()
+    plt.savefig("./figures/Figure5_3d.pdf")
     plt.show()
 
 
@@ -212,22 +255,23 @@ Qf = np.eye(3)                   # Final state cost
 k_bar = 60                        # Total time steps
 
 # Noise properties
-Rv = 1                            # Process noise covariance (v_k ~ N(0, 1))
-Rw = 4                            # Measurement noise covariance (w_k ~ N(0, 4))
+Rv = 1                           # Process noise covariance (v_k ~ N(0, 1))
+Rw = 1                            # Measurement noise covariance (w_k ~ N(0, 4))
 
 # Compute LQR feedback gains
 K, P = lqr_control(A, B_u, Q, R, Qf, k_bar)
 
 # Initial state
-x0 = np.random.multivariate_normal(np.zeros(3), np.eye(3))  # Initial state x0 ~ N(0, I)
+Sigma = 25*np.eye(3)  # initial covariance
+x0 = np.random.multivariate_normal(np.zeros(3), Sigma)  # Initial state x0 ~ N(0, I)
 
 # Simulate LQR (no Σ needed) and LQG controllers
-x_LQR, u_LQR, _, _, _     = simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv)
-x_true, x_hat_LQG, u, y, Sigmas = simulate_lq_control(A, B_u, B_v, C, K, k_bar, x0, mode='lqg', Rw=Rw, Rv=Rv)
+x_LQR, u_LQR, _, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv)
+x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqg', Rw=Rw, Rv=Rv)
 
 if __name__ == '__main__':
     # Plot the results with ±1σ shading
     figure5_3a(x_LQR, x_true, Sigmas, k_bar)
-    figure5_3b(x_true, x_hat_LQG, y, Sigmas, k_bar)
-    figure5_3c(x_true, x_hat_LQG, Sigmas, k_bar)
-    figure5_3d(x_true, x_hat_LQG, Sigmas, k_bar)
+    figure5_3b(x_true, x_hat_LQG, y, Sigmas, x_check, Sigmac, k_bar)
+    figure5_3c(x_true, x_hat_LQG, Sigmas, x_check, Sigmac, k_bar)
+    figure5_3d(x_true, x_hat_LQG, Sigmas, x_check, Sigmac, k_bar)

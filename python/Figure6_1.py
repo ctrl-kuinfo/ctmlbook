@@ -1,3 +1,7 @@
+# Author: Kenji Kashima
+# Date  : 2025/04/01
+# Note  : pip install control
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_discrete_lyapunov

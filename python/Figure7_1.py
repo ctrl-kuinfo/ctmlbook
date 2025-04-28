@@ -20,7 +20,6 @@ def phi(x:float)->np.ndarray:
 def phi_real(x:float)->float:
     '''
         x - input
-
     '''
     return 2*np.sin(5*x)
 
