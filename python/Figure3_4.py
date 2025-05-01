@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2024/04/01
 # Note  : pip install control
 
 import control as ctl
@@ -41,7 +41,7 @@ def figure3_4b(n_k:int=200):
     dsys= ctl.tf(num,den,dt=1.0) # discrete-time interval is 1.0s
     dsys = ctl.tf2io(dsys)       # Convert a transfer function into an I/O system 
     v_k = np.random.randn(n_k+1) # random input
-    data = ctl.input_output_response(dsys,T=np.arange(0,201),U=u_k)
+    data = ctl.input_output_response(dsys,T=np.arange(0,201),U=v_k)
     y_k = data.y[0,:]
     plt.figure(figsize=figsize)
     plt.xlabel(r'$k$')
