@@ -1,10 +1,10 @@
 % Author: Kenji Kashima
-% Date  : 2023/02/24
+% Date  : 2025/04/01
 
 clear;close all; rng(1); % random seed
 
 n_sample = 20; % number of samples
-n_k = 20;      % number of k
+n_k = 10;      % number of k
 
 a = 0.5;       % gain
 x_max = 10;    % range of y_lim

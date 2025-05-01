@@ -1,5 +1,6 @@
 % Author: Kenji Kashima
-% Date  : 2023/02/25
+% Date  : 2025/04/01
+% Note  : requires DSP Toolbox or Signal Processing Toolbox
 
 clear;close all; rng(1); % random seed
 
@@ -20,12 +21,12 @@ movegui('northwest')
 % Figure 3.4(b)
 freq_model = tf(b,a,1);
 n_k = 200; % number of k
-u_k = randn(n_k+1, 1);    % random input from [0,1]
-y_k = lsim(freq_model,u_k); % Plot simulated time response of dynamic system 
+v_k = randn(n_k+1, 1);    % random input from [0,1]
+y_k = lsim(freq_model,v_k); % Plot simulated time response of dynamic system 
                          % to arbitrary inputs; simulated response data
 
 figure('Name','Figure 3.4(b)'); hold on; grid on;
-stairs(u_k)
+stairs(v_k)
 stairs(y_k,'linewidth',1)
 xlim([0,200])
 ylim([-2,2])

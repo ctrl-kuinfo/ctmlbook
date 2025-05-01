@@ -1,5 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2023/02/25
+% Date  : 2025/04/01
 
 clear;close all; rng(6); % random seed
 
@@ -35,7 +35,7 @@ for i = 1:n_sample
     % number in the interval (0,1).
     for k = 1:n_k-1
         x_i = x(k);
-        x(k+1) =  x_i + 0.1*(x_i-x_i^3) + 0.5*(rand*2-1.0)*(1-abs(x_i)); 
+        x(k+1) =  x_i + 0.1*(x_i-x_i^3) + (rand-0.5)*(1-abs(x_i)); 
     end
     plot(x,LineWidth=2)
 end
