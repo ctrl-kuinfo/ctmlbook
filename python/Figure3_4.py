@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2024/04/01
+# Date  : 2025/04/01
 # Note  : pip install control
 
 import control as ctl
