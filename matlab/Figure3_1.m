@@ -1,62 +1,79 @@
 % Author: Kenji Kashima
-% Date  : 2023/02/24
+% Date  : 2025/04/01
 
-clear; close all; rng(1); % random seed
+clear; close all;
+rng(1);  % keep original MATLAB seed
+
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
 set(groot, 'defaultTextInterpreter','latex');
 set(groot, 'defaultLegendInterpreter','latex');
 
+%% Parameters
+n_tmp    = 1000;
+n_x      = 2 * n_tmp + 1;   % number of x grid points
+x        = linspace(-1, 1, n_x)';
+dx       = x(2) - x(1);
+n_k_a    = 9;               % number of time steps for Figure 3.1(a)
+n_k_b    = 50;              % total steps for Figure 3.1(b)
+n_sample = 10;              % number of sample trajectories
 
-% Figure 3.1(a)
-figure('Name', 'Figure 3.1(a)'); hold on; view(-17,22); grid('on');
-n_tmp = 1000;
-n_k = 9;         % number of k
-n_x = 2 * n_tmp + 1; % number of x
-x = linspace(-1, 1, n_x);
+%% Build transition matrix P
 P = zeros(n_x, n_x);
 for i = 1:n_x
-    x_i = x(i);
-    tmp_u = x_i + 0.1*(x_i - x_i^3) + 0.5*(1 - abs(x_i));
-    tmp_l = x_i + 0.1*(x_i - x_i^3) - 0.5*(1 - abs(x_i));
-    index_u = ceil((tmp_u + 1) * n_tmp) + 1;
-    index_l = floor((tmp_l + 1) * n_tmp) + 1;    
-    for j = index_l:index_u
-        P(j, i) = P(j, i) + 1 / (index_u - index_l + 1);
+    xi    = x(i);
+    fb    = xi + 0.1*(xi - xi^3);
+    noise = 0.5*(1 - abs(xi));
+    upper = fb + noise;
+    lower = fb - noise;
+    idx_u = ceil((upper + 1)*n_tmp) + 1;
+    idx_l = floor((lower + 1)*n_tmp) + 1;
+    % match Python: j = idx_l : idx_u-1
+    for j = idx_l:(idx_u-1)
+        P(j,i) = P(j,i) + 1.0 / (idx_u - idx_l + 1);
     end
 end
 
-states = zeros(n_x, n_k + 2); states(n_tmp + 1, 1) = 1;  % initialization
-for i = 1:n_k + 1
-    states(:, i + 1) = P * states(:, i);
+%% Figure 3.1(a): propagate a uniform init on [-0.5,0.5]
+% define and normalize initial distribution
+init = double((x >= -0.5) & (x <= 0.5));
+init = init / (sum(init) * dx);
+
+% propagate
+phi = zeros(n_x, n_k_a+1);
+phi(:,1) = init;
+for k = 1:n_k_a
+    phi(:,k+1) = P * phi(:,k);
 end
 
-for i = 2:n_k + 1
-    k = ones(n_x, 1) * (i - 2);
-    phi = states(:, i) * n_x / 2;
-    plot3(k, x', phi, 'LineWidth', 2)
+% plot
+figure('Name','Figure 3.1(a)'); hold on; view(26, -107); grid on;
+for k = 0:n_k_a
+    plot3(...
+      k*ones(n_x,1), ...
+      x, ...
+      phi(:,k+1), ...
+      'LineWidth', 2 ...
+    );
 end
-xlabel('$k$', 'Interpreter', 'latex', 'Fontsize', 18);
-ylabel('$x$', 'Interpreter', 'latex', 'Fontsize', 18);
-zlabel('$\varphi_{x_k}$', 'Interpreter', 'latex', 'Fontsize', 18);
+xlabel('$k$','Interpreter','latex','FontSize',18);
+ylabel('$x$','Interpreter','latex','FontSize',18);
+zlabel('$\varphi_{x_k}$','Interpreter','latex','FontSize',18);
+yticks([-1 -0.5 0 0.5 1]);
+movegui('northeast');
 
-movegui('northeast')
-
-
-% Figure 3.1(b)
-n_k = 50;      % total steps
-n_sample = 10; % number of samples 
-figure('Name', 'Figure 3.1(b)'); hold on; grid('on'); 
-
-for i = 1:n_sample
-    x = zeros(1, n_k); 
-    x(1) = rand - 0.5; % initialization
-    for k = 1:n_k-1
-        x_i = x(k);
-        x(k+1) =  x_i + 0.1*(x_i - x_i^3) + 0.5*(rand - 0.5)*(1 - abs(x_i)); 
+%% Figure 3.1(b): sample trajectories with matching noise scale
+figure('Name','Figure 3.1(b)'); hold on; grid on;
+for s = 1:n_sample
+    xx = zeros(1, n_k_b);
+    xx(1) = rand - 0.5;  % in [-0.5, 0.5]
+    for k = 1:(n_k_b-1)
+        noise = rand - 0.5;  % uniform in [-0.5,0.5]
+        xi    = xx(k);
+        xx(k+1) = xi + 0.1*(xi - xi^3) + noise*(1 - abs(xi));
     end
-    plot(x, 'LineWidth', 2)
+    plot(0:(n_k_b-1), xx, 'LineWidth', 2);
 end
-xlim([1, n_k])
-xlabel('$k$', 'Interpreter', 'latex', 'Fontsize', 18);
-ylabel('$x_k$', 'Interpreter', 'latex', 'Fontsize', 18);
-movegui('northwest')
+xlim([0, n_k_b-1]);
+xlabel('$k$','Interpreter','latex','FontSize',18);
+ylabel('$x_k$','Interpreter','latex','FontSize',18);
+movegui('northwest');

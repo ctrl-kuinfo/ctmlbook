@@ -1,116 +1,132 @@
 % Author: Kenji Kashima
-% Date  : 2024/10/12
-% Note  : Example 5.2.7
+% Date  : 2025/04/01
+% Note  : requires Control System Toolbox
 
-clear;close all; rng(1); % random seed
+clear; close all;
+rng(1);  % Random seed
 
-
-% System matrices
-A = [0.40, 0.37, 0.09;
-     0.52, 0.66, 0.15;
-     0.21, 0.66, 0.04];  
-B_u = [0; 1; 0];         % Control input matrix
-B_v = [1; 0; 0];         % Disturbance input matrix (noise)
-C = [1, 0, 0];           % Output matrix
+% Define system matrices
+A   = [0.40, 0.37, 0.09;
+       0.52, 0.66, 0.15;
+       0.21, 0.66, 0.04];
+B_u = [0; 1; 0];
+B_v = [1; 0; 0];
+C   = [1, 0, 0];
 
 % LQR parameters
-Q = diag([0, 0, 1]);     % State cost matrix
-R = 1;                   % Control input cost
-Qf = eye(3);             % Final state cost
-k_bar = 60;              % Total time steps
+Q    = diag([0, 0, 1]);
+R    = 1;
+Qf   = eye(3);
+k_bar = 60;
 
 % Noise properties
-Rv = 1;                  % Process noise covariance (v_k ~ N(0, 1))
-Rw = 4;                  % Measurement noise covariance (w_k ~ N(0, 4))
+Rv = 1.0;   % process noise covariance
+Rw = 1.0;   % measurement noise covariance
 
-% Initialize state and control matrices for finite-horizon LQR
-P = cell(k_bar+1, 1);    % Store cost-to-go matrices P
-K = cell(k_bar, 1);      % Store feedback gains K
-P{k_bar+1} = Qf;         % Terminal cost is Qf
+% Initial covariance and state
+Sigma0 = 25 * eye(3);
+x0     = mvnrnd(zeros(3,1), Sigma0)';
+x_max  = 6;
 
-% Backward recursion to solve the finite-horizon LQR problem
-for k = k_bar:-1:1
-    K{k} = (R + B_u' * P{k+1} * B_u) \ (B_u' * P{k+1} * A);
-    P{k} = Q + A' * P{k+1} * A - A' * P{k+1} * B_u * K{k};
+%% LQR backward Riccati recursion
+[K, SigmaList] = lqr_control(A, B_u, Q, R, Qf, k_bar);
+
+%% Simulate LQR and LQG
+[x_LQR, ~, ~, ~, ~, ~, ~] = simulate_lq_control(A, B_u, B_v, C, Sigma0, K, k_bar, x0, 'lqr', Rw, Rv);
+[x_true, x_hat, u, y, Sigmas, x_check, Sigmac] = ...
+    simulate_lq_control(A, B_u, B_v, C, Sigma0, K, k_bar, x0, 'lqg', Rw, Rv);
+
+%% Plot Figure 5.3(a)
+figure('Name','Figure 5.3(a)'); hold on; grid on;
+plot(0:k_bar, x_LQR(3,:), 'k', 'LineWidth',1);
+plot(0:k_bar, x_true(3,:), 'b', 'LineWidth',1);
+sd = sqrt(squeeze(Sigmas(3,3,:)))';
+fill([0:k_bar, fliplr(0:k_bar)], [x_true(3,:)+sd, fliplr(x_true(3,:)-sd)], 'b', 'FaceAlpha',0.2, 'EdgeColor','none');
+xlabel('$k$','Interpreter','latex');
+legend('$(x_k)_3$ (LQR)','$(x_k)_3$ (LQG)','Location','best','Interpreter','latex');
+ylim([-x_max, x_max]);
+
+%% Plot Figure 5.3(b)
+figure('Name','Figure 5.3(b)'); hold on; grid on;
+plot(0:k_bar, x_true(1,:), 'b', 'LineWidth',1);
+plot(1:k_bar, y,           'r', 'LineWidth',1);
+plot(0:k_bar, x_hat(1,:), 'b--', 'LineWidth',1);
+sd = sqrt(squeeze(Sigmas(1,1,:)))';
+fill([0:k_bar, fliplr(0:k_bar)], [x_hat(1,:)+sd, fliplr(x_hat(1,:)-sd)], 'b', 'FaceAlpha',0.2, 'EdgeColor','none');
+xlabel('$k$','Interpreter','latex');
+legend('True $(x_k)_1$','Measurements $y_k$','Estimate $(\hat x_k)_1$','Location','best','Interpreter','latex');
+ylim([-x_max, x_max]);
+
+%% Plot Figure 5.3(c)
+figure('Name','Figure 5.3(c)'); hold on; grid on;
+plot(0:k_bar, x_true(2,:), 'b', 'LineWidth',1);
+plot(0:k_bar, x_hat(2,:), 'b--', 'LineWidth',1);
+sd = sqrt(squeeze(Sigmas(2,2,:)))';
+fill([0:k_bar, fliplr(0:k_bar)], [x_hat(2,:)+sd, fliplr(x_hat(2,:)-sd)], 'b', 'FaceAlpha',0.2, 'EdgeColor','none');
+xlabel('$k$','Interpreter','latex');
+legend('True $(x_k)_2$','Estimate $(\hat x_k)_2$','Location','best','Interpreter','latex');
+ylim([-x_max, x_max]);
+
+%% Plot Figure 5.3(d)
+figure('Name','Figure 5.3(d)'); hold on; grid on;
+plot(0:k_bar, x_true(3,:), 'b', 'LineWidth',1);
+plot(0:k_bar, x_hat(3,:), 'b--', 'LineWidth',1);
+sd = sqrt(squeeze(Sigmas(3,3,:)))';
+fill([0:k_bar, fliplr(0:k_bar)], [x_hat(3,:)+sd, fliplr(x_hat(3,:)-sd)], 'b', 'FaceAlpha',0.2, 'EdgeColor','none');
+xlabel('$k$','Interpreter','latex');
+legend('True $(x_k)_3$','Estimate $(\hat x_k)_3$','Location','best','Interpreter','latex');
+ylim([-x_max, x_max]);
+
+%% Functions matching Python version
+function [K, Sigma] = lqr_control(A, B_u, Q, R, Qf, k_bar)
+    Sigma = cell(k_bar+1,1);
+    K     = cell(k_bar,1);
+    Sigma{k_bar+1} = Qf;
+    for k = k_bar:-1:1
+        R_tilde = R + B_u' * Sigma{k+1} * B_u;
+        S_tilde = A' * Sigma{k+1} * B_u;
+        Q_tilde = Q + A' * Sigma{k+1} * A;
+        K{k}     = R_tilde \ (S_tilde');
+        Sigma{k} = Q_tilde - S_tilde * (R_tilde \ S_tilde');
+    end
 end
 
-% Design Kalman filter (state estimator) for LQG control
-% Solve Riccati equation for Kalman gain
-S = cell(k_bar+1, 1);    % Store state estimation error covariance
-L = cell(k_bar, 1);      % Store Kalman gains
-S{k_bar+1} = Qf;         % Terminal state estimation error covariance
-
-for k = k_bar:-1:1
-    % Compute Kalman gain
-    L{k} = A * S{k+1} * C' / (C * S{k+1} * C' + Rw);
-    % Riccati recursion for state estimation error covariance
-    S{k} = A * S{k+1} * A' - A * S{k+1} * C' / (C * S{k+1} * C' + Rw) * C * S{k+1} * A' + B_v * Rv * B_v';
+function [x_true, x_hat, u, y, Sigmas, x_check, Sigmac] = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw, Rv)
+    nx = size(A,1);
+    w  = sqrt(Rw) * randn(1,k_bar);
+    v  = sqrt(Rv) * randn(1,k_bar);
+    x_true  = zeros(nx, k_bar+1);
+    x_hat   = zeros(nx, k_bar+1);
+    Sigmas  = zeros(nx, nx, k_bar+1);
+    x_check = zeros(nx, k_bar);
+    Sigmac  = zeros(nx, nx, k_bar);
+    u       = zeros(1, k_bar);
+    y       = zeros(1, k_bar);
+    x_true(:,1)   = x0;
+    x_hat(:,1)    = zeros(nx,1);
+    Sigmas(:,:,1) = Sigma;
+    for k = 1:k_bar
+        if strcmp(mode,'lqr')
+            u(k) = -K{k} * x_true(:,k);
+        else
+            if strcmp(mode,'lqg_pred')
+                u(k) = -K{k} * x_hat(:,k);
+            end
+            y(k) = C * x_true(:,k) + w(k);
+            M_tilde = C * Sigma * C' + Rw;
+            L_check = Sigma * C';
+            H_check = L_check / M_tilde;
+            innov = y(k) - C * x_hat(:,k);
+            x_check(:,k) = x_hat(:,k) + H_check * innov;
+            Sigma_check = Sigma - L_check / M_tilde * L_check';
+            Sigmac(:,:,k) = Sigma_check;
+            if strcmp(mode,'lqg')
+                u(k) = -K{k} * x_check(:,k);
+            end
+            x_hat(:,k+1) = A * x_check(:,k) + B_u * u(k);
+            Sigma = A * Sigma_check * A' + Rv * eye(nx);
+        end
+        x_true(:,k+1) = A * x_true(:,k) + B_u * u(k) + B_v * v(k);
+        Sigmas(:,:,k+1) = Sigma;
+    end
 end
-
-% Simulation for LQR and LQG controllers
-x_LQR = zeros(3, k_bar+1);   % True state for LQR control
-x_LQG = zeros(3, k_bar+1);   % True state for LQG control
-x_hat_LQG = zeros(3, k_bar+1);  % Estimated state for LQG control
-u_LQR = zeros(1, k_bar);     % Control inputs for LQR
-u_LQG = zeros(1, k_bar);     % Control inputs for LQG
-y_LQG = zeros(1, k_bar);     % Output measurements for LQG
-w = sqrt(Rw) * randn(1, k_bar);  % Measurement noise w_k ~ N(0, 4)
-v = sqrt(Rv) * randn(1, k_bar);  % Process noise v_k ~ N(0, 1)
-
-% Initial state for both controllers
-x0 = mvnrnd(zeros(3,1), eye(3))';  % Initial state x0 ~ N(0, I)
-x_LQR(:,1) = x0;
-x_LQG(:,1) = x0;
-x_hat_LQG(:,1) = [0; 0; 0];  % Initial estimate of the state (zero)
-
-% Simulate both controllers
-for k = 1:k_bar
-    % LQR control (full state feedback)
-    u_LQR(k) = -K{k} * x_LQR(:,k);
-    % True system dynamics for LQR
-    x_LQR(:,k+1) = A * x_LQR(:,k) + B_u * u_LQR(k) + B_v * v(k);
-    
-    % LQG control (output feedback with state estimation)
-    y_LQG(k) = C * x_LQG(:,k) + w(k);  % Measurement with noise
-    u_LQG(k) = -K{k} * x_hat_LQG(:,k);  % Control input based on estimated state
-    % True system dynamics for LQG
-    x_LQG(:,k+1) = A * x_LQG(:,k) + B_u * u_LQG(k) + B_v * v(k);
-    % State estimation (Kalman filter update)
-    x_hat_LQG(:,k+1) = A * x_hat_LQG(:,k) + B_u * u_LQG(k) + L{k} * (y_LQG(k) - C * x_hat_LQG(:,k));
-end
-
-% Plot the results
-set(0, 'DefaultTextInterpreter', 'latex');  
-set(0, 'DefaultLegendInterpreter', 'latex');  
-figure;
-% Plot state trajectories for LQR and LQG
-plot(0:k_bar, x_LQR(3,:), "Color", 'black', 'DisplayName', '$(x_k)_3$ (LQR)');hold on;
-plot(0:k_bar, x_LQG(3,:), 'b', 'DisplayName', '$(x_k)_3$ (LQG)');
-xlabel('Time step $k$');
-legend();
-hold off;
-
-figure;
-% Plot state trajectories for LQG
-plot(0:k_bar, x_LQG(1,:), 'b', 'DisplayName', '$(x_k)_1$ (LQG)');hold on;
-plot(0:k_bar, x_hat_LQG(1,:), 'b--', 'DisplayName', '$(\hat{x}_k)_1$ (LQG)');
-plot(1:k_bar, y_LQG(:), 'r', 'DisplayName', '$y_k$ (LQG)');
-xlabel('Time step $k$');
-legend();
-hold off;
-
-figure;
-% Plot state trajectories for LQG
-plot(0:k_bar, x_LQG(2,:), 'b', 'DisplayName', '$(x_k)_2$ (LQG)');hold on;
-plot(0:k_bar, x_hat_LQG(2,:), 'b--', 'DisplayName', '$(\hat{x}_k)_2$ (LQG)');
-xlabel('Time step $k$');
-legend();
-hold off;
-
-figure;
-% Plot state trajectories for LQG
-plot(0:k_bar, x_LQG(3,:), 'b', 'DisplayName', '$(x_k)_3$ (LQG)');hold on;
-plot(0:k_bar, x_hat_LQG(3,:), 'b--', 'DisplayName', '$(\hat{x}_k)_3$ (LQG)');
-xlabel('Time step $k$');
-legend();
-hold off;
