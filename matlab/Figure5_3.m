@@ -49,7 +49,7 @@ ylim([-x_max, x_max]);
 %% Plot Figure 5.3(b)
 figure('Name','Figure 5.3(b)'); hold on; grid on;
 plot(0:k_bar, x_true(1,:), 'b', 'LineWidth',1);
-plot(1:k_bar, y,           'r', 'LineWidth',1);
+plot(0:k_bar-1, y,           'r', 'LineWidth',1);
 plot(0:k_bar, x_hat(1,:), 'b--', 'LineWidth',1);
 sd = sqrt(squeeze(Sigmas(1,1,:)))';
 fill([0:k_bar, fliplr(0:k_bar)], [x_hat(1,:)+sd, fliplr(x_hat(1,:)-sd)], 'b', 'FaceAlpha',0.2, 'EdgeColor','none');
