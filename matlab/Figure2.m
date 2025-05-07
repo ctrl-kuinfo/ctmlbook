@@ -1,7 +1,7 @@
 % Author: Kenji Kashima
 % Date  : 2025/04/01
 
-%figure2_1a
+figure2_1a
 figure2_1b
 
 function figure2_1a()
@@ -34,7 +34,7 @@ function figure2_1a()
     plot(x, pdf_x3, 'm', 'DisplayName', '$x_3 \sim \rm{Lap}(0, 1)$');  % Purple
 
     % Add legend and labels
-    legend('show');
+    legend('show','Interpreter','latex');
     xlabel('x');
     xlim([-5, 5]);
     grid on;
