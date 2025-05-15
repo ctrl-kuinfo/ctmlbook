@@ -27,13 +27,13 @@ def initialize_cost_matrices(n_x, n_u):
     QRS = QRS @ QRS.T  # Ensure QRS is positive definite
     Q = QRS[:n_x, :n_x]  # Stage cost for states
     R = QRS[n_x:, n_x:]  # Stage cost for control inputs
-    S = QRS[n_x:, :n_x]  # Cross term between state and control input
+    S = QRS[:n_x, n_x:]  # Cross term between state and control input
     return Q, R, S
 
 
 def optimal_gain(A, B, Q, R, S, beta):
     """Compute the optimal gain using the discrete-time LQR approach."""
-    _, P_opt, _ = control.dlqr(A * np.sqrt(beta), B * np.sqrt(beta), Q, R, S.T)
+    _, P_opt, _ = control.dlqr(A * np.sqrt(beta), B * np.sqrt(beta), Q, R, S)
     return P_opt
 
 def value_iteration(A, B, Q, R, S, P_opt, beta, N_iter):
@@ -45,30 +45,26 @@ def value_iteration(A, B, Q, R, S, P_opt, beta, N_iter):
     i = 1
     while True:
         Rt = R + beta * B.T @ PI @ B
-        St = S + beta * B.T @ PI @ A
+        St = S + beta * A.T @ PI @ B
         Qt = Q + beta * A.T @ PI @ A
-        PIt = Qt - St.T @ np.linalg.solve(Rt, St)  # Solve for PIt
-        Kt = np.linalg.solve(Rt, St)  # Calculate Kt
-        if np.sqrt(beta) * np.max(np.abs(np.linalg.eigvals(A - B @ Kt))) < 1:
-            print(f"Converged after {i} iterations")
+        K = np.linalg.solve(Rt, St.T)  # Calculate K(Pi)
+        if np.sqrt(beta) * np.max(np.abs(np.linalg.eigvals(A - B @ K ))) < 1:
+            print(f"Stablilized after {i} iterations")
             break
         i += 1
-        PI = PIt
+        PI = Qt - St @ np.linalg.solve(Rt, St.T)  # Pi <- Ric(Pi)
 
-    PI_ini = PIt
-    K_ini = Kt
-
-
+    PI_ini = PI
+    K_ini = K
 
     # Error list for further iterations
-    PIt = PI_ini
+    PI = PI_ini
     for i in range(N_iter):
-        err_list_VI[i] = np.linalg.norm(P_opt - PIt)
+        err_list_VI[i] = np.linalg.norm(P_opt - PI)
         Rt = R + beta * B.T @ PI @ B
-        St = S + beta * B.T @ PI @ A
+        St = S + beta * A.T @ PI @ B
         Qt = Q + beta * A.T @ PI @ A
-        PIt = Qt - St.T @ np.linalg.solve(Rt, St)
-        PI = PIt
+        PI = Qt - St @ np.linalg.solve(Rt, St.T)    # PI <- Ric(Pi)
 
     return PI_ini, K_ini, err_list_VI
 
@@ -76,17 +72,17 @@ def policy_iteration(A, B, Q, R, S, P_opt, beta, K_ini, PI_ini, N_iter):
     # Policy iteration
     n_x = np.shape(A)[0]
     err_list_PI = np.zeros(N_iter)
-    Kt = K_ini
-    PIt = PI_ini
+    K = K_ini
+    PI = PI_ini
     for i in range(N_iter):
-        err_list_PI[i] = np.linalg.norm(P_opt - PIt)
-        PI_Q = solve_discrete_lyapunov(np.sqrt(beta) * (A - B * Kt).T,
-                                    np.block([np.eye(n_x), - Kt.T]) @ np.block([[Q, S.T],[S, R]]) @ np.block([[np.eye(n_x)],[-Kt]]))
+        err_list_PI[i] = np.linalg.norm(P_opt - PI)
+        PI_Q = solve_discrete_lyapunov(np.sqrt(beta) * (A - B * K).T,
+                                    np.block([np.eye(n_x), - K.T]) @ np.block([[Q, S],[S.T, R]]) @ np.block([[np.eye(n_x)],[-K]]))
         Rt = R + beta * B.T @ PI_Q @ B
-        St = S + beta * B.T @ PI_Q @ A
+        St = S + beta * A.T @ PI_Q @ B
         Qt = Q + beta * A.T @ PI_Q @ A
-        Kt = np.linalg.solve(Rt, St)
-        PIt = Qt - St.T @ Kt  # For Riccati error calculation
+        K = np.linalg.solve(Rt, St.T)   # - Upsilon_22^{-1} Upsilon_12'
+        PI = Qt - St @ K  # Calculate V^pi from Q^pi for error analysis
     return err_list_PI
     
 def Figure6_1(beta=0.95, N_iter=11):

@@ -1,5 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2023/03/12
+% Date  : 2025/04/01
 
 clear;close all; rng(1); % random seed
 
@@ -19,8 +19,9 @@ for i=1:n_data
 end
 X=X';
 
-% hyper-parameter
-beta = 0.01;
+% weight of regularization (= standard deviation^2) 
+
+sigma_sq = 0.01;
 
 % optimization 1 Naive
 cvx_begin
@@ -32,18 +33,19 @@ theta_naive=theta;
 % optimization 2 Lasso
 cvx_begin
 variable theta(10)
-minimize(power(2,norm(X*theta-y_s))/n_data+ beta*power(2,norm(theta)))
+minimize(power(2,norm(X*theta-y_s))/n_data+ sigma_sq*power(2,norm(theta)))
 cvx_end
 theta_lasso=theta;
 
 % optimization 3 Ridge
 cvx_begin
 variable theta(10)
-minimize(power(2,norm(X*theta-y_s))/n_data+beta*norm(theta,1))
+minimize(power(2,norm(X*theta-y_s))/n_data+sigma_sq*norm(theta,1))
 cvx_end
 theta_ridge=theta;
 
-n_x=100;
+
+n_x=100;    % number of x-grid for plot
 x = linspace(0,1,n_x);
 NAIVE_dat = zeros(1,n_x); LASSO_dat = zeros(1,n_x); 
 RIDGE_dat = zeros(1,n_x); f_real = zeros(1,n_x);

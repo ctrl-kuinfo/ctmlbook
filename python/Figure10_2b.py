@@ -1,5 +1,6 @@
 # Author: Kenji Kashima
-# Date  : 2023/11/05
+# Date  : 2025/04/01
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
@@ -13,6 +14,7 @@ import config
 def figure10_2b(N_k= 300):
     figsize = config.global_config(type= 1)
     # Figure 10.2 (a) transition probability
+    # P(i,j) = Prob(state=i to state=j)
     P = np.array([[1/3,    1/3,      0,      0],
                   [0  ,    1/3,    1/3,      0],
                   [0  ,    1/3,    1/3,    1/3],
@@ -24,6 +26,7 @@ def figure10_2b(N_k= 300):
     print("p_100=",p_stable)
     
     # accumulated transition probability
+    # P_accum(i,j) = Prob(state=i to state <= j)
     m,n =P.shape
     P_accum = np.zeros((m,n))
     P_accum[0,:] = P[0,:]
@@ -35,8 +38,8 @@ def figure10_2b(N_k= 300):
     p_list[0] = 4 # start at 4
 
     for i in range(1,N_k):
-        u = np.random.rand()
-        T = P_accum[:,int(p_list[i-1])-1] #transition probability
+        u = np.random.rand()                # uniform distribution on [0,1]
+        T = P_accum[:,int(p_list[i-1])-1]   # T(j) = Prob( state=i to state <= j )
         for j in range(m):
             if u <= T[j]:
                 p_list[i] = j+1

@@ -1,3 +1,6 @@
+# Author: Kenji Kashima
+# Date  : 2025/04/01
+
 import numpy as np
 import matplotlib.pyplot as plt
 np.random.seed(23)

@@ -1,6 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2024/10/14
-% Note  : Example 5.3.2
+% Date  : 2025/04/01
 
 clear;close all; rng(1); % random seed
 
