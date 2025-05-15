@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2024/10/19
+# Date  : 2025/04/01
 
 import cvxpy as cp
 import numpy as np

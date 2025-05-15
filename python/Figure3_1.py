@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/02/11
+# Date  : 2025/04/01
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,70 +11,85 @@ np.random.seed(100)
 
 def figure3_1a(n_k=9):
     '''
-        n_k - number of k
+        n_k - number of time steps
     '''
     figsize = config.global_config(type=1)
 
     n_tmp = 1000
-    n_x = 2*n_tmp+1 # number of x
-    x = np.linspace(-1,1,n_x)
-    P = np.zeros([n_x,n_x])
-    for i in range(n_x):
-        tmp_u = x[i] + 0.1*(x[i]-x[i]**3) + 0.5*(1-np.abs(x[i]))
-        tmp_l = x[i] + 0.1*(x[i]-x[i]**3) - 0.5*(1-np.abs(x[i]))
-        index_u = int(np.ceil((tmp_u+1)*n_tmp))+1
-        index_l = int(np.floor((tmp_l+1)*n_tmp))+1    
-        for j in range(index_l,index_u):
-            P[j,i]=P[j,i]+1/(index_u-index_l+1)
+    n_x = 2 * n_tmp + 1   # number of discrete x points over [-1, 1]
+    x = np.linspace(-1, 1, n_x)
+    dx = x[1] - x[0]      # discretization interval
 
-    states = np.zeros([n_x,n_k+2]); 
-    states[n_tmp+1,0]=1;  #initialization
-    for i in range(n_k+1):
-        states[:,i+1] = P @ states[:,i]
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"},figsize=figsize)
-    for i in range(1,n_k+1):
-        k=np.ones(n_x)*(i-1)
-        phi=states[:,i]*n_x/2
-        ax.plot3D(k,x.T,phi)
-    ax.set_xlabel(r'$k$',labelpad=20)
-    ax.set_ylabel(r'${\rm x}$',labelpad=20)
+    # Build transition probability matrix P (approximate uniform noise over interval)
+    P = np.zeros([n_x, n_x])
+    for i in range(n_x):
+        # fb(x) = x + 0.1*(x - x^3)  
+        # noise amplitude: c(x) = 0.5*(1 - |x|)  
+        upper = x[i] + 0.1 * (x[i] - x[i]**3) + 0.5 * (1 - np.abs(x[i]))
+        lower = x[i] + 0.1 * (x[i] - x[i]**3) - 0.5 * (1 - np.abs(x[i]))
+        idx_u = int(np.ceil((upper + 1) * n_tmp)) + 1
+        idx_l = int(np.floor((lower + 1) * n_tmp)) + 1
+        for j in range(idx_l, idx_u):
+            P[j, i] += 1.0 / (idx_u - idx_l + 1)
+
+    # Define initial distribution φₓ₀ = 1 on [-0.5, 0.5]
+    init = np.where((x >= -0.5) & (x <= 0.5), 1.0, 0.0)
+    # Normalize so that sum(init)*dx = 1
+    init /= (np.sum(init) * dx)
+
+    # Initialize phi array: each column is the state distribution at time k
+    phi = np.zeros([n_x, n_k + 1])
+    phi[:, 0] = init
+
+    # Propagate the distribution by multiplying with P at each time step
+    for k in range(n_k):
+        phi[:, k + 1] = P @ phi[:, k]
+        # If needed, re-normalize to guard against numerical drift:
+        # phi[:, k+1] /= (np.sum(phi[:, k+1]) * dx)
+
+    # Plot from k=0 onward
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=figsize)
+    for k in range(n_k + 1):
+        ax.plot3D(np.full(n_x, k), x, phi[:, k])
+
+    ax.set_xlabel(r'$k$', labelpad=20)
+    ax.set_ylabel(r'${\rm x}$', labelpad=20)
     ax.zaxis.set_rotate_label(False)
-    ax.set_zlabel(r'$\varphi_{x_k}$',rotation=90,labelpad=20)
+    ax.set_zlabel(r'$\varphi_{x_k}$', rotation=90, labelpad=20)
     ax.view_init(26, -107)
-    ax.set_yticks([-1,-0.5,0,0.5,1])
+    ax.set_yticks([-1, -0.5, 0, 0.5, 1])
     plt.grid()
     plt.tight_layout()
     plt.savefig("./figures/Figure3_1a.pdf")
     plt.show()
 
-def figure3_1b(n_k:int=50,n_sample:int=10):
-    '''
-        n_k - total steps
 
-        n_sample - number of samples
+def figure3_1b(n_k: int = 50, n_sample: int = 10):
+    '''
+        n_k       - total number of steps
+        n_sample  - number of sample trajectories
     '''
     config.global_config()
 
-    plt.figure(figsize=(8,7))
+    plt.figure(figsize=(8, 7))
     for _ in range(n_sample):
         x = np.zeros(n_k)
-        rand = np.random.rand()
-        x[0] = rand-0.5 # initialization
-        # Note: rand is a single uniformly distributed random 
-        # number in the interval (0,1).
-        for k in range(n_k-1):
-             rand = np.random.rand()
-             x[k+1] =  x[k] + 0.1*(x[k]-x[k]**3) + (rand-0.5)*(1-np.abs(x[k])) 
-        plt.plot(x,linewidth=2)
-    plt.xlim([0,n_k-1])
+        x[0] = np.random.rand() - 0.5  # initial state in [-0.5, 0.5]
+        for k in range(n_k - 1):
+            noise = np.random.rand() - 0.5  # uniform in [-0.5, 0.5]
+            x[k + 1] = x[k] + 0.1 * (x[k] - x[k]**3) + noise * (1 - np.abs(x[k]))
+        plt.plot(x, linewidth=2)
+
+    plt.xlim([0, n_k - 1])
     plt.xlabel(r'$k$')
     plt.ylabel(r'$x_k$')
     plt.grid()
-    plt.ylim([-1,1])
+    plt.ylim([-1, 1])
     plt.tight_layout()
     plt.savefig("./figures/Figure3_1b.pdf")
     plt.show()
 
+
 if __name__ == '__main__':
     figure3_1a(n_k=9)
-    figure3_1b(n_k=30,n_sample=10)
+    figure3_1b(n_k=30, n_sample=10)

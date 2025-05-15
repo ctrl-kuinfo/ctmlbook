@@ -23,7 +23,7 @@ R = QRS(n_x+1:n_x+n_u,n_x+1:n_x+n_u);
 S = QRS(n_x+1:n_x+n_u,1:n_x);
 
 % Optimal gain 
-[~,PI_opt,~] = dlqr(A*sqrt(beta),B*sqrt(beta),Q,R,S');
+[~,P_opt,~] = dlqr(A*sqrt(beta),B*sqrt(beta),Q,R,S');
 
 %% Value iteration %%
 err_list_VI = zeros(1,N_iter);
@@ -43,12 +43,12 @@ while 1
     i = i+1;
     PI = PIt;
 end
-PIini = PIt;
-Kini = Kt;
+PI_ini = PIt;
+K_ini = Kt;
 
-PIt=PIini;
+PIt=PI_ini;
 for i=1:N_iter
-    err_list_VI(i)= norm(PI_opt-PIt);
+    err_list_VI(i)= norm(P_opt-PIt);
     Rt = R + beta * B'*PI*B;
     St = S + beta * B'*PI*A;
     Qt = Q + beta * A'*PI*A; 
@@ -59,10 +59,10 @@ end
 
 %% Policy iteration %%
 err_list_PI = zeros(1,N_iter);
-Kt = Kini;
-PIt = PIini;
+Kt = K_ini;
+PIt = PI_ini;
 for i=1:N_iter
-    err_list_PI(i) =  norm(PI_opt-PIt);
+    err_list_PI(i) =  norm(P_opt-PIt);
     PI_Q = dlyap(sqrt(beta)*(A-B*Kt)', [eye(n_x,n_x) -Kt']*[Q S';S R]*[eye(n_x,n_x);-Kt]); 
     Rt = R + beta * B'*PI_Q*B;
     St = S + beta * B'*PI_Q*A;

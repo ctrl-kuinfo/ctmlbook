@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2023/11/30
+# Date  : 2025/04/01
 import numpy as np
 import matplotlib.pyplot as plt
 

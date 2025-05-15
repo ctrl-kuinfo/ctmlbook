@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/02/01
+# Date  : 2025/04/01
 # Note  : You should install scipy first.
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,11 +22,13 @@ def func_v(v, beta, a, b, P):
 def figure10_4(N_k= 1000, sigma = 1.0):
     
     # Figure 10.2 (a) transition probability(P0)
+    # P(i,j) = Prob(state=i to state=j)
     P = np.array([[1/3,    1/3,      0,      0],
                   [0  ,    1/3,    1/3,      0],
                   [0  ,    1/3,    1/3,    1/3],
                   [2/3,      0,    1/3,    2/3]])
     # accumulated transition probability
+    # P_accum(i,j) = Prob(state=i to state <= j)
     m,n =P.shape
     beta = 0.8
     invbeta = 1/beta
@@ -64,21 +66,31 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     # %    0.0522         0    0.0296    0.2317
     # %
 
-    p_stable = np.ones((4,1))/4
-    for _ in range(100):
-        p_stable =  P_opt@p_stable
-    print("p^star_100=",p_stable)
+    # 固有値と固有ベクトルを計算
+    eigvals, eigvecs = np.linalg.eig(P_opt)
+    index = np.argmax(eigvals)
+    eigenvector_for_1 = eigvecs[:, index]
+    sum_of_elements = np.sum(eigenvector_for_1)
+    p_stationary = eigenvector_for_1 / sum_of_elements
+    print("p_stationary for P_opt：")
+    print(p_stationary)
+
+    # p_stable = np.ones((4,1))/4
+    # for _ in range(100):
+    #     p_stable =  P_opt@p_stable
+    # print("p^star_100=",p_stable)
     # p^star_100= 
     # [[0.80000712]
     #  [0.07943279]
     #  [0.06376809]
     #  [0.056792  ]]
 
+    # accumulated transition probability
+    # P_accum(i,j) = Prob(state=i to state <= j)
     P_accum = np.zeros((m,n))
     P_accum[0,:] = P_opt[0,:]
     for i in range(1,m):
         P_accum[i,:]= P_accum[i-1,:]+P_opt[i,:]
-
 
     p_list = np.zeros(N_k+1,dtype=np.int8) 
     p_list[0] = 4 
@@ -98,8 +110,8 @@ def figure10_4(N_k= 1000, sigma = 1.0):
 
         inv_l_hist[:,i] = inv_l
 
-        u = np.random.rand()
-        T = P_accum[:,int(p_list[i])-1] #transition probability
+        u = np.random.rand()                # uniform distribution on [0,1]
+        T = P_accum[:,int(p_list[i])-1]     # T(j) = Prob( state=i to state <= j )
         for j in range(m):
             if u <= T[j]:
                 p_list[i+1] = j+1
