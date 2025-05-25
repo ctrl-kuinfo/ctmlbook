@@ -1,5 +1,6 @@
 % Author: Kenji Kashima
-% Date  : 2023/09/30
+% Date  : 2025/05/22
+
 clear;close all; rng(1); % random seed
 
 N_iter = 10;
@@ -69,7 +70,6 @@ for i=1:N_iter
     Qt = Q + beta * A'*PI_Q*A;
     PIt = Qt - St' * (Rt \ St); % for Riccati error calculation
     Kt = Rt \ St;
-    
 end
 
 figure('Name','Figure 6.1'); hold on; grid on;

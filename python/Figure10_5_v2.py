@@ -108,27 +108,33 @@ def simulation(value, ini_state, Tmax, deterministic):
 
 def sum_value_near_agents(state, sensor_range, X1, X2, value):
     """
-    Returns:
-        float: Sum of value[I, J] for all grid cells (I, J) around (X1, X2)
-               where at least one agent is within 'sensor_range'.
+    Vectorized version. Returns the sum of value[I, J] around (X1, X2)
+    where at least one agent is within 'sensor_range' of (I, J).
     """
-    weighted_value = 0
-    evaluation_range = sensor_range + 3
+    evaluation_range = int(sensor_range + 3)
     X1, X2 = int(X1), int(X2)
-    for I in range(max(1, X1 - evaluation_range), min(grid_size, X1 + evaluation_range)+1):
-        for J in range(max(1, X2 - evaluation_range), min(grid_size, X2 + evaluation_range)+1):
-            weighted_value += value[I, J] * is_agent_nearby(state, I, J, sensor_range)
-    return weighted_value
 
-def is_agent_nearby(state, X1, X2, sensor_range):
-    """
-    Returns:
-        int: 1 if at least one agent is within 'sensor_range' from (X1,X2), otherwise 0.
-    """
-    dx = state[:, 0] - X1
-    dy = state[:, 1] - X2
-    squared_distance = dx**2 + dy**2
-    return int(np.any(squared_distance < sensor_range**2))
+    # 定義域の切り出し（境界考慮）
+    I_min = max(1, X1 - evaluation_range)
+    I_max = min(grid_size, X1 + evaluation_range) + 1
+    J_min = max(1, X2 - evaluation_range)
+    J_max = min(grid_size, X2 + evaluation_range) + 1
+
+    # 対象グリッド座標をベクトルで生成
+    I, J = np.meshgrid(np.arange(I_min, I_max), np.arange(J_min, J_max), indexing='ij')
+    I_flat = I.ravel()
+    J_flat = J.ravel()
+    grid_points = np.stack([I_flat, J_flat], axis=1)  # shape: (M, 2)
+
+    # state: shape (N, 2)
+    # grid_points: shape (M, 2)
+    # → 距離行列 (N, M)
+    dists_sq = np.sum((state[:, None, :] - grid_points[None, :, :])**2, axis=2)  # (N, M)
+    is_close = np.any(dists_sq < sensor_range**2, axis=0)  # shape (M,)
+
+    # 対象 value を抽出して合計
+    values_flat = value[I_flat, J_flat]
+    return np.sum(values_flat[is_close])
 
 
 def Figure10_5a(value):

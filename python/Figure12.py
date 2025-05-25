@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2025/05/25
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,7 +28,6 @@ def figure12_2(N_x= 100, c = 0.1,label="a"):
 
     # original function in example 13.1.7
     y_list = x_list # y=mu(x)=x
-
 
     plt.figure(figsize=figsize)
 
@@ -161,12 +160,12 @@ def figure12_4(N_x= 100, s_bar = 10, label="a", sample0=None):
     plt.show()
 
 if __name__ == '__main__':
-    figure12_2(N_x=100,c = 0.1, label="a") #Figure12.2(a)
-    figure12_2(N_x=100,c = 1.0, label="b") #Figure12.2(b)
-    sample10 =figure12_3(N_x=100, s_bar = 10, label="a") #Figure12.3(a)
+    figure12_2(N_x=100, c = 0.1, label="a") #Figure12.2(a)
+    figure12_2(N_x=100, c = 1.0, label="b") #Figure12.2(b)
+    sample10 = figure12_3(N_x=100, s_bar = 10, label="a") #Figure12.3(a)
     sample50 = figure12_3(N_x=100, s_bar = 50, label="b") #Figure12.3(b)
-    figure12_4(N_x=100, s_bar = 10, label="a",sample0=sample10) #Figure12.4(a)
-    figure12_4(N_x=100, s_bar = 50, label="b",sample0=sample50) #Figure12.4(b)
+    figure12_4(N_x=100, s_bar = 10, label="a", sample0 = sample10) #Figure12.4(a)
+    figure12_4(N_x=100, s_bar = 50, label="b", sample0 = sample50) #Figure12.4(b)
 
 
 

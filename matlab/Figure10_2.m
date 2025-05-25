@@ -1,5 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2025/04/01
+% Date  : 2025/05/22
 
 clear;close all; rng(3); % random seed
 
@@ -47,11 +47,3 @@ xlim([0,N_k]);
 ylim([0.8,4.2]);
 xlabel('$k$','Fontsize',16,'Interpreter','latex')
 title('$P^0$','Fontsize',16,'Interpreter','latex')
-
-
-
-
-
-
-
-
