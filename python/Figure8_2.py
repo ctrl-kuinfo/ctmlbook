@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2024/04/01
+# Date  : 2025/05/01
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,8 +31,6 @@ def sysid_module(p_star:np.ndarray,n:int,q0:np.ndarray,u:np.ndarray,v:np.ndarray
     for k in range(N-1):
         y[k] =  p_star[k,:] @ q[k,:] + v[k]
         q[k+1,:]=np.hstack([y[k],q[k,0:n-1],u[k+1],q[k,n:dim_p-1]])
-
-    
 
     p_est = np.zeros((N,dim_p))
     err_a = np.zeros(N)

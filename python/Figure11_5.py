@@ -1,9 +1,9 @@
 # Author: Kenji Kashima
-# Date  : 2023/11/05
+# Date  : 2025/05/24
 import numpy as np
 import matplotlib.pyplot as plt
 
-np.random.seed(7)
+np.random.seed(33)
 import sys
 sys.path.append("./")
 import config
@@ -32,7 +32,7 @@ def figure11_5a():
 def figure11_5b(N_k= 2000):
     figsize = config.global_config(type= 1)
     C = [1.0, 1.0, 1.0]
-    alpha = [0.4,0.8,1.2]
+    alpha = [0.4, 0.8, 1.2]
 
     x_list = np.zeros((3,N_k+1))
     y_list = np.zeros((3,N_k))
@@ -50,7 +50,7 @@ def figure11_5b(N_k= 2000):
             x_list[k,i+1] = x - C[k]/((i+1)**alpha[k]) * y_list[k,i]
         plt.plot(x_list[k,:],label=r"$\alpha={}$".format(alpha[k]))
 
-    # plt.scatter(0,1,marker='o',s=40,clip_on=False,color='black',label= "Initial Value",zorder=20)
+    plt.scatter(0,1,marker='o',s=40,clip_on=False,color='black',label= "Initial Value",zorder=20)
     plt.ylabel(r"$p_k$")
     plt.xlabel(r"$k$")
     plt.xlim([0,N_k])
@@ -60,6 +60,7 @@ def figure11_5b(N_k= 2000):
     plt.tight_layout()
     plt.savefig("./figures/Figure11_5b.pdf")
     plt.show()
+
 
 
 if __name__ == '__main__':

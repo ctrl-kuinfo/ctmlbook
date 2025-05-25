@@ -1,5 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2023/03/12
+% Date  : 2025/05/22
 
 clear;close all; rng(1); % random seed
 
@@ -9,7 +9,7 @@ phi = @(x) [1 ; x ; x^2 ; x^3 ; x^4 ; x^5 ; x^6 ; x^7 ; x^8 ; x^9 ];
 phi_real = @(x) 2*sin(5*x); 
 
 
-n_x = 100;    % number of x-grid for plot
+n_x = 100;
 n_sample = 20;
 x = linspace(0,1,n_x);
 X = zeros(10,n_x); 
