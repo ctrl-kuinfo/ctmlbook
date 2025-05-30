@@ -1,37 +1,37 @@
 % Author: Kenji Kashima
-% Date  : 2023/11/05
+% Date  : 2025/05/31
 
 clear;close all; rng(3); % random seed
 
 N_k = 100;
 
-C = [0.5, 0.5, 1.0, 1.0];
+C = [0.6, 0.6, 1.0, 1.0];
+
 alpha = [1.0 0.3 1.0 1.5];
-
-x_list = zeros(N_k,4);
+x_list = zeros(N_k+1,4); 
 y_list = zeros(N_k,4);
-figure('Name','Figure11.4(a)'); % Please change N_k = 10000 to obtain Figure11.4(b)
+
+figure('Name','Figure11.4(a)'); % Please change N_k = 5000 for Figure11.4(b)
 hold on; grid on;
-x_list(1,:) = 10;
-for k = 1:4
-    for i = 1:N_k        
-        x = x_list(i,k);
-        y_list(i,k) = x - randn;   %% mean estimation
-        x_list(i+1,k) = x - C(k)/(i^alpha(k)) * y_list(i,k);
+x_list(1,:) = 1.0; 
+
+for k_param = 1:4 
+    for i_step = 1:N_k        
+        x = x_list(i_step,k_param);
+        y_list(i_step,k_param) = x - randn;   % mean estimation: y_k = p_k - z_k
+        x_list(i_step+1,k_param) = x - C(k_param)/(i_step^alpha(k_param)) * y_list(i_step,k_param);
     end
-    plot(0:N_k,x_list(:,k));
+    plot(0:N_k,x_list(:,k_param));
 end
-plot(0,10,'*'); % start point
 
+plot(0,1.0,'ko','MarkerFaceColor','k','DisplayName','Initial Value'); 
 xlabel('$k$','Interpreter','latex','Fontsize',18);
-ylabel('$x_k$','Interpreter','latex','Fontsize',18);
-legend('$C=0.5,\ \alpha=1$','$C=0.5,\ \alpha=0.3$','$C=1,\ \alpha=1$','$C=0.5,\ \alpha=1.5$','Initial value','Interpreter','latex','Fontsize',10)
+ylabel('$p_k$','Interpreter','latex','Fontsize',18); 
+legend_labels = cell(1,4);
+for idx = 1:4
+    legend_labels{idx} = ['$C=',num2str(C(idx)),',\ \alpha=',num2str(alpha(idx)),'$'];
+end
 
-
-
-
-
-
-
-
-
+legend([legend_labels, {'Initial Value'}],'Interpreter','latex','Fontsize',10,'Location','best')
+ylim([-2 2]); 
+hold off;
