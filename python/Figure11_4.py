@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/05/24
+# Date  : 2025/05/31
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,25 +8,34 @@ import sys
 sys.path.append("./")
 import config
 
-
 def figure11_4(N_k= 100,label="a"):
+    """
+    Runs a SGD simulation for mean estimation.
+
+    Parameters:
+        N_k : simulation time length.
+    """
     np.random.seed(23)
     figsize = config.global_config(type= 1)
-    C = [0.6, 0.6, 1.0, 1.0]
-    alpha = [1.0, 0.3, 1.0, 1.5]
+    C = [0.6, 0.6, 1.0, 1.0]        # constants for step size
+    alpha = [1.0, 0.3, 1.0, 1.5]    # decay rate for step size
+    N_setting = len(C)              # Number of settings
 
-    x_list = np.zeros((4,N_k+1))
-    y_list = np.zeros((4,N_k))
-    plt.figure(figsize=figsize)  # Please change N_k = 10000 to obtain Figure12.2(b)
-    x_list[:,0] = np.ones_like(x_list[:,0])*1 #start at 10.0
-    for k in range(4):
-        for i in range(N_k):        
-            x = x_list[k,i]
-            y_list[k,i] = x - np.random.randn()   # mean estimation
-            x_list[k,i+1] = x - C[k]/((i+1)**alpha[k]) * y_list[k,i]
-        plt.plot(x_list[k,:],label=r"$C={}, \alpha={}$".format(C[k],alpha[k]))
+    p_ini = 1                       # initial value for SGD
+    p_list = np.zeros((N_setting,N_k+1))
+    y_list = np.zeros((N_setting,N_k))
+    plt.figure(figsize=figsize)  
+    p_list[:,0] = np.ones_like(p_list[:,0]) * p_ini 
+    for setting in range( N_setting ):
+        for k in range(N_k):        
+            p = p_list[setting,k]
+            z = np.random.randn()   # sampling of z_k 
+            y_list[setting,k] = p - z   # Fig 11.4   
+            # y_list[setting,i] = ( p > z ) - 0.5    # 演習 11.3 
+            p_list[setting,k+1] = p - C[setting]/((k+1)**alpha[setting]) * y_list[setting,k]
+        plt.plot(p_list[setting,:],label=r"$C={}, \alpha={}$".format(C[setting],alpha[setting]))
 
-    # plt.scatter(0,10,marker='o',s=80,clip_on=False,color='black',label= "Initial Value",zorder=20)
+    plt.scatter(0,p_ini,marker='o',s=80,clip_on=False,color='black',label= "Initial Value",zorder=20)
     plt.ylabel(r"$p_k$")
     plt.xlabel(r"$k$")
     plt.xlim([0,N_k])
