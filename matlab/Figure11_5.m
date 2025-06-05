@@ -1,54 +1,86 @@
 % Author: Kenji Kashima
-% Date  : 2025/05/31
+% Date  : 2025/06/05
+% Note  : Figure 11.5(a) and 11.5(b) in one run, variable names match Python version
 
-clear;close all; rng(3); % random seed
+clear; close all;
+rng(23);  % Random seed
 
-figure('Name','Figure11.5(a)'); hold on; grid on;
+%% Common definitions
+p_vals = -5:0.01:5;
 
-x = -5:0.01:5;
-y = (x.^2/2-x.*cos(x*10)/20+sin(x*10)/20)/2;
-plot(x,y);
-y = (x+x.*sin(x*10)/2)/2;
-plot(x,y);
-y = x+1/2;
-plot(x,y)
-y = x.*sin(x*10)/2 -1/2;
-plot(x,y)
-grid on;
-xlabel('$x$','Interpreter','latex','Fontsize',18);
-ylabel('$x_k$','Interpreter','latex','Fontsize',18);
-legend('$L(x)$','$\nabla L(x)$','$\nabla L_1(x)$','$\nabla L_2(x)$','Interpreter','latex','Fontsize',10)
+L1_sym      = (p_vals.^2) / 2 + p_vals / 2;              % L1(p) = p^2/2 + p/2
+grad_L1_sym = p_vals + 1/2;                              % ∇L1(p) = p + 1/2
 
+L2_sym      = -p_vals .* cos(10 * p_vals) / 20 + sin(10 * p_vals) / 200 - p_vals / 2;
+                                                          % L2(p) = -p·cos(10p)/20 + sin(10p)/200 - p/2
+grad_L2_sym = (p_vals .* sin(10 * p_vals)) / 2 - 1/2;     % ∇L2(p) = p·sin(10p)/2 − 1/2
+
+L_sym       = (L1_sym + L2_sym) / 2;                     % L(p) = (L1(p) + L2(p)) / 2
+grad_L_sym  = (grad_L1_sym + grad_L2_sym) / 2;            % ∇L(p) = (∇L1(p) + ∇L2(p)) / 2
+
+%% Figure 11.5(a)
+figure('Name','Figure 11.5(a)'); hold on; grid on;
+
+plot(p_vals, L_sym,      'LineWidth',1);
+plot(p_vals, grad_L_sym, 'LineWidth',1);
+plot(p_vals, grad_L1_sym,'LineWidth',1);
+plot(p_vals, grad_L2_sym,'LineWidth',1);
+
+xlabel('$x$','Interpreter','latex','FontSize',18);
+legend({ ...
+    '$L(x)$', ...
+    '$\nabla L(x)$', ...
+    '$\nabla L_{1}(x)$', ...
+    '$\nabla L_{2}(x)$' ...
+    }, ...
+    'Interpreter','latex','FontSize',10,'Location','best');
+
+xlim([-5, 5]);
+ylim([-5, 7]);
+
+%% Figure 11.5(b): SGD simulation for solving L(p)=0
 N_k = 2000;
-C = [1.0, 1.0, 1.0];
-alpha = [0.4, 0.8, 1.2];
+C     = [1.0, 1.0, 1.0];      % Step‐size constants
+alpha = [0.4, 0.8, 1.2];      % Decay exponents
+N_setting = numel(C);
 
-x_list = zeros(N_k+1,3);
-y_list = zeros(N_k,3);
-figure('Name','Figure11.5(b)');
-hold on; grid on;
-x_list(1,:) = 1.0;
+p_list = zeros(N_setting, N_k + 1);
+y_list = zeros(N_setting, N_k);
 
-for k_param = 1:3
-    for i_step = 1:N_k
-        x = x_list(i_step,k_param);
-        if rand < 0.5
-           y_list(i_step,k_param) = x + 1/2;
+p_ini = 1;
+p_list(:,1) = p_ini;
+
+figure('Name','Figure 11.5(b)'); hold on; grid on;
+
+for setting = 1:N_setting
+    for k = 1:N_k
+        p = p_list(setting, k);
+        % Randomly choose ∇L1 or ∇L2 with equal probability
+        if rand() < 0.5
+            y = p + 1/2;                    % grad_L1_sym
         else
-           y_list(i_step,k_param) = x*sin(x*10)/2 - 1/2;
+            y = (p * sin(10 * p)) / 2 - 1/2; % grad_L2_sym
         end
-        x_list(i_step+1,k_param) = x - C(k_param)/((i_step)^alpha(k_param)) * y_list(i_step,k_param);
+        y_list(setting, k) = y;
+        % Update: p_{k+1} = p_k − (C(setting) / k^alpha(setting)) * y
+        p_list(setting, k + 1) = p - C(setting) / (k ^ alpha(setting)) * y;
     end
-    plot(0:N_k,x_list(:,k_param));
+    plot(0:N_k, p_list(setting, :), 'LineWidth', 1);
 end
-plot(0,1.0,'ko','MarkerFaceColor','k','DisplayName','Initial Value'); % start point - original comment for initial value marker
-xlabel('$k$','Interpreter','latex','Fontsize',18);
-ylabel('$p_k$','Interpreter','latex','Fontsize',18);
-legend_labels = cell(1,3);
-for idx = 1:3
-    legend_labels{idx} = ['$\alpha=',num2str(alpha(idx)),'$'];
-end
-legend([legend_labels, {'Initial Value'}],'Interpreter','latex','Fontsize',10,'Location','best');
-ylim([-2 2]);
+
+% Initial value marker
+plot(0, p_ini, 'ko', 'MarkerFaceColor', 'k', 'MarkerSize', 6, 'DisplayName', 'Initial Value');
+
+xlabel('$k$','Interpreter','latex','FontSize',18);
+ylabel('$p_{k}$','Interpreter','latex','FontSize',18);
 xlim([0, N_k]);
-hold off;
+ylim([-2, 2]);
+
+% Legend labels with matching significant digits
+legend_labels = cell(1, N_setting + 1);
+for idx = 1:N_setting
+    legend_labels{idx} = sprintf('$C=%.1f,\\ \\alpha=%.1f$', C(idx), alpha(idx));
+end
+legend_labels{end} = 'Initial Value';
+
+legend(legend_labels, 'Interpreter','latex','FontSize',10,'Location','best');

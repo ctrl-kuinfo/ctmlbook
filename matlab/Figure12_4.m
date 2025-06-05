@@ -1,6 +1,5 @@
 % Author: Kenji Kashima
 % Date  : 2023/11/27
-% Note  : You need to install Statistics and Machine Learning Toolbox
 
 clear;close all; rng(3); % random seed
 

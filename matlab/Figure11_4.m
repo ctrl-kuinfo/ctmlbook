@@ -1,37 +1,56 @@
 % Author: Kenji Kashima
-% Date  : 2025/05/31
+% Date  : 2025/06/05
 
-clear;close all; rng(3); % random seed
+clear; close all;
+rng(23);  % Random seed
 
-N_k = 100;
+% Step‐size parameters
+C_vals     = [0.6, 0.6, 1.0, 1.0];
+alpha_vals = [1.0, 0.3, 1.0, 1.5];
+numSettings = numel(C_vals);
 
-C = [0.6, 0.6, 1.0, 1.0];
+% Two simulation lengths: (a) N_k=100, (b) N_k=5000
+N_list = [100, 5000];
 
-alpha = [1.0 0.3 1.0 1.5];
-x_list = zeros(N_k+1,4); 
-y_list = zeros(N_k,4);
+for idxFig = 1:2
+    N_k = N_list(idxFig);
+    p_history = zeros(numSettings, N_k+1);
+    p_history(:,1) = 1;  % initial value p(0)=1 for all settings
 
-figure('Name','Figure11.4(a)'); % Please change N_k = 5000 for Figure11.4(b)
-hold on; grid on;
-x_list(1,:) = 1.0; 
-
-for k_param = 1:4 
-    for i_step = 1:N_k        
-        x = x_list(i_step,k_param);
-        y_list(i_step,k_param) = x - randn;   % mean estimation: y_k = p_k - z_k
-        x_list(i_step+1,k_param) = x - C(k_param)/(i_step^alpha(k_param)) * y_list(i_step,k_param);
+    for s = 1:numSettings
+        C = C_vals(s);
+        alpha = alpha_vals(s);
+        for k = 1:N_k
+            p_k      = p_history(s,k);
+            z_k      = randn;                    % z_k ~ N(0,1)
+            p_history(s,k+1) = p_k - C/((k)^alpha) * (p_k - z_k);
+        end
     end
-    plot(0:N_k,x_list(:,k_param));
-end
 
-plot(0,1.0,'ko','MarkerFaceColor','k','DisplayName','Initial Value'); 
-xlabel('$k$','Interpreter','latex','Fontsize',18);
-ylabel('$p_k$','Interpreter','latex','Fontsize',18); 
-legend_labels = cell(1,4);
-for idx = 1:4
-    legend_labels{idx} = ['$C=',num2str(C(idx)),',\ \alpha=',num2str(alpha(idx)),'$'];
-end
+    % Plot all trajectories in one figure
+    figure('Name', sprintf('Figure 11.4(%s)', char('a'+idxFig-1))); hold on; grid on;
+    k_axis = 0:N_k;
+    colors = lines(numSettings);
 
-legend([legend_labels, {'Initial Value'}],'Interpreter','latex','Fontsize',10,'Location','best')
-ylim([-2 2]); 
-hold off;
+    for s = 1:numSettings
+        plot(k_axis, p_history(s,:), 'LineWidth', 1.5, 'Color', colors(s,:));
+    end
+
+    % Mark initial value at k=0
+    scatter(0, 1, 80, 'k', 'filled', 'DisplayName', 'Initial Value');
+
+    xlim([0, N_k]);
+    ylim([-2, 2]);
+    xlabel('k', 'Interpreter','latex', 'FontSize',14);
+    ylabel('$p_k$', 'Interpreter','latex', 'FontSize',14);
+
+    % Build legend entries for the four step‐size settings
+    legendEntries = cell(1, numSettings+1);
+    for s = 1:numSettings
+        legendEntries{s} = sprintf('$C=%.1f,\\ \\alpha=%.1f$', C_vals(s), alpha_vals(s));
+    end
+    legendEntries{end} = 'Initial Value';
+
+    legend(legendEntries, 'Interpreter','latex', 'FontSize',10, 'Location','best');
+    hold off;
+end
