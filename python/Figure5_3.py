@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2025/06/21
 # Note  : pip install control
 
 import numpy as np
@@ -64,7 +64,7 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
     K              : list of finite-horizon LQR gains K[k]
     k_bar          : horizon length
     x0             : initial state vector
-    mode           : 'lqr', 'lqg', or 'lqg_pred'
+    mode           : 'lqr', 'lqg_kalman', or 'lqg_pred'
     Rw, Rv         : measurement and process noise covariances
     v              : optional pre-generated process noise sequence
 
@@ -126,7 +126,7 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
             Sigmac[:, :, k] = Sigma_check
 
             # Choose input using updated estimate for LQG
-            if mode == 'lqg':
+            if mode == 'lqg_kalman':
                 u[k] = -K[k] @ x_check[:, k]
 
             # 5) Time update (prior for next step)
@@ -147,7 +147,7 @@ def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
     plt.plot(t, x_LQR[2], 'k', label='$(x_k)_3$ (LQR)')
     plt.plot(t, x_true[2], 'b', label='$(x_k)_3$ (LQG)')
     sd = np.sqrt(Sigmas[2, 2])
-    plt.fill_between(t, x_true[2] - sd, x_true[2] + sd, color='blue', alpha=0.2)
+    # plt.fill_between(t, x_true[2] - sd, x_true[2] + sd, color='blue', alpha=0.2)
 
     plt.xlabel('$k$')
     plt.legend()
@@ -171,7 +171,7 @@ def figure5_3b(x_true, x_hat, y, Sigmas, x_check, Sigmac, k_bar):
     sd = np.sqrt(Sigmas[0, 0])
     plt.fill_between(t, x_hat[0] - sd, x_hat[0] + sd, color='blue', alpha=0.2)
 
-    ##  Plot corrected estimate
+    # #  Plot corrected estimate
     # sd_c = np.sqrt(Sigmac[0, 0])
     # plt.plot(t_c, x_check[0], 'r--', label='Corrected estimate $(\check x_k)_1$')
     # plt.fill_between(t_c, x_check[0] - sd_c, x_check[0] + sd_c, color='red', alpha=0.2)
@@ -267,7 +267,7 @@ x0 = np.random.multivariate_normal(np.zeros(3), Sigma)  # Initial state x0 ~ N(0
 
 # Simulate LQR (no Σ needed) and LQG controllers
 x_LQR, u_LQR, _, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv)
-x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqg', Rw=Rw, Rv=Rv)
+x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqg_pred', Rw=Rw, Rv=Rv)
 
 if __name__ == '__main__':
     # Plot the results with ±1σ shading
