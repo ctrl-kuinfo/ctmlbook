@@ -52,7 +52,7 @@ def lqr_control(A, B_u, Q, R, Qf, k_bar):
     return K, Sigma
 
 
-def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=None):
+def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=None, w=None):
     """
     Simulate LQG controller using Algorithm 1 order
     Records true state, state estimates, inputs, measurements, and covariance
@@ -60,6 +60,7 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
     Parameters
     ----------
     A, B_u, B_v, C : system matrices
+    mu             : Inistial mean estimate
     Sigma          : Inistial covariance
     K              : list of finite-horizon LQR gains K[k]
     k_bar          : horizon length
@@ -67,6 +68,7 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
     mode           : 'lqr', 'lqg_kalman', or 'lqg_pred'
     Rw, Rv         : measurement and process noise covariances
     v              : optional pre-generated process noise sequence
+    w              : optional pre-generated observation noise sequence
 
     Returns
     -------
@@ -84,6 +86,8 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
     w = np.sqrt(Rw) * np.random.randn(k_bar)  # measurement noise w_k ~ N(0, Rw)
     if v is None:
         v = np.sqrt(Rv) * np.random.randn(k_bar)  # process noise v_k ~ N(0, Rv)
+    if w is None:
+        w = np.sqrt(Rw) * np.random.randn(k_bar)  # observation noise w_k ~ N(0, Rv)
 
     # Allocate containers
     x_true  = np.zeros((nx, k_bar + 1))
@@ -96,7 +100,7 @@ def simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.
 
     # Initial conditions
     x_true[:, 0] = x0
-    x_hat[:, 0]  = np.zeros(nx)
+    x_hat[:, 0]  = mu
     Sigmas[:, :, 0] = Sigma
 
     # Main loop over time steps
@@ -146,6 +150,8 @@ def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
     plt.figure(figsize=figsize)
     plt.plot(t, x_LQR[2], 'k', label='$(x_k)_3$ (LQR)')
     plt.plot(t, x_true[2], 'b', label='$(x_k)_3$ (LQG)')
+    sd = np.sqrt(Sigmas[2, 2])
+    plt.plot(t, x_true_k[2], 'r', label='$(x_k)_3$ (LQG Kalman)')
     sd = np.sqrt(Sigmas[2, 2])
     # plt.fill_between(t, x_true[2] - sd, x_true[2] + sd, color='blue', alpha=0.2)
 
@@ -247,6 +253,7 @@ A = np.array([[0.40, 0.37, 0.09],
 B_u = np.array([[0], [1], [0]])  # Control input matrix
 B_v = np.array([[1], [0], [0]])  # Disturbance input matrix (noise)
 C = np.array([[1, 0, 0]])        # Output matrix
+nx = A.shape[0]
 
 # LQR parameters
 Q = np.diag([0, 0, 1])           # State cost matrix
@@ -258,16 +265,24 @@ k_bar = 60                        # Total time steps
 Rv = 1                           # Process noise covariance (v_k ~ N(0, 1))
 Rw = 1                            # Measurement noise covariance (w_k ~ N(0, 4))
 
+# process noise v_k ~ N(0, Rv) 
+process_noise = np.sqrt(Rv) * np.random.randn(k_bar)          
+# observation noise w_k ~ N(0, Rw) 
+obs_noise = np.sqrt(Rw) * np.random.randn(k_bar)
+
 # Compute LQR feedback gains
 K, P = lqr_control(A, B_u, Q, R, Qf, k_bar)
 
 # Initial state
-Sigma = 25*np.eye(3)  # initial covariance
-x0 = np.random.multivariate_normal(np.zeros(3), Sigma)  # Initial state x0 ~ N(0, I)
+mu = np.zeros(nx)   # initial mean
+Sigma = 25*np.eye(nx)  # initial covariance
+x0 = np.random.multivariate_normal( mu, Sigma)  # Initial state x0 ~ N(mu, Sigma)
 
 # Simulate LQR (no Σ needed) and LQG controllers
-x_LQR, u_LQR, _, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv)
-x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, Sigma, K, k_bar, x0, mode='lqg_pred', Rw=Rw, Rv=Rv)
+x_LQR, u_LQR, _, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqg_pred', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+x_true_k, x_hat_LQG_k, u_k, y_k, Sigmas_k, x_check_k, Sigmac_k = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqg_kalman', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+
 
 if __name__ == '__main__':
     # Plot the results with ±1σ shading
