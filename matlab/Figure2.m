@@ -1,10 +1,38 @@
 % Author: Kenji Kashima
-% Date  : 2025/04/01
+% Date  : 2025/06/21
 
 figure2_1a
 figure2_1b
 
 function figure2_1a()
+    % Set up the x values from 0 to 10 with 1000 points
+    x = linspace(0, 10, 1000);
+
+    % Probability density function for N(2, 1)
+    pdf_x2 = normpdf(x, 2, 1);  % N(2, 1)
+
+    % Laplace distribution with parameters (0, 1)
+    pdf_x3 = laplace_pdf(x, 0, 1); 
+
+    % Create a figure with specified size
+    figure('Position', [100, 100, 800, 800]);
+
+    % Plot the probability density functions
+    plot(x, pdf_x2, 'Color', [1, 0.647, 0], 'DisplayName', '$\mathcal{N}(2, 1)$'); hold on; % Orange
+    plot(x, pdf_x3, 'm', 'DisplayName', '$\rm{Lap}(0, 1)$');  % Purple
+
+    % Add legend and labels
+    legend('show');
+    xlabel('|x|');
+    xlim([0, 10]);
+    ylim([1e-12, 1]);
+    set(gca, 'YScale', 'log');  % Set y-axis to logarithmic scale
+    grid on;
+    
+    hold off;  % Release hold on the current plot
+end
+
+function figure2_1b()
     % Set up the x values from -10 to 10 with 1000 points
     x = linspace(-10, 10, 1000);
 
@@ -47,34 +75,4 @@ function y = laplace_pdf(x, mu, b)
     % Laplace PDF calculation
     y = (1/(2*b)) * exp(-abs(x - mu) / b);
 end
-
-
-function figure2_1b()
-    % Set up the x values from 0 to 10 with 1000 points
-    x = linspace(0, 10, 1000);
-
-    % Probability density function for N(2, 1)
-    pdf_x2 = normpdf(x, 2, 1);  % N(2, 1)
-
-    % Laplace distribution with parameters (0, 1)
-    pdf_x3 = laplace_pdf(x, 0, 1); 
-
-    % Create a figure with specified size
-    figure('Position', [100, 100, 800, 800]);
-
-    % Plot the probability density functions
-    plot(x, pdf_x2, 'Color', [1, 0.647, 0], 'DisplayName', '$\mathcal{N}(2, 1)$'); hold on; % Orange
-    plot(x, pdf_x3, 'm', 'DisplayName', '$\rm{Lap}(0, 1)$');  % Purple
-
-    % Add legend and labels
-    legend('show');
-    xlabel('|x|');
-    xlim([0, 10]);
-    ylim([1e-12, 1]);
-    set(gca, 'YScale', 'log');  % Set y-axis to logarithmic scale
-    grid on;
-    
-    hold off;  % Release hold on the current plot
-end
-
 
