@@ -1,5 +1,6 @@
 # Author: Kenji Kashima
 # Date  : 2025/05/24
+# Figure10_5.py と同じ結果．計算時間短縮
 
 import numpy as np
 import matplotlib.pyplot as plt

@@ -263,7 +263,7 @@ k_bar = 60                        # Total time steps
 
 # Noise properties
 Rv = 1                           # Process noise covariance (v_k ~ N(0, 1))
-Rw = 1                            # Measurement noise covariance (w_k ~ N(0, 4))
+Rw = 4                            # Measurement noise covariance (w_k ~ N(0, 4))
 
 # process noise v_k ~ N(0, Rv) 
 process_noise = np.sqrt(Rv) * np.random.randn(k_bar)          
