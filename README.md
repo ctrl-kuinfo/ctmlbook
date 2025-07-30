@@ -28,7 +28,7 @@
 
 ## 追加資料
 
-最新版および更新履歴はgithubレポジトリ <img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" width="20">  [sct4L](https://github.com/sct4L/cst4L.github.io/) をご参照ください。
+最新版および更新履歴はgithubレポジトリ <img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" width="20">  [sct-ml](https://github.com/sct-ml/sct-ml.github.io/) をご参照ください。
 
 ### 正誤表および補足情報
 
