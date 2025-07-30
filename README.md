@@ -17,9 +17,8 @@
 - 目次 [.mdファイル](./TOC.md)
 - サポートページ [https://sct4L.github.io/](https://sct4L.github.io/) 
 - 引用情報  
-> 加嶋 健司，統計的学習のためのシステム制御理論，森北出版，2025  
-> Kenji Kashima, *Systems Control Theory for Statistical Learning*, Morikita Publishing Co., Ltd., 2025
-
+> 加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
+> Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
 <img src="./lab.png" width="300">
 <!-- ![fig](./lab.png) -->
 
