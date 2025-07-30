@@ -1,6 +1,6 @@
-# 「仮」 サポートページ
+# 「システム制御理論と統計的機械学習」 サポートページ
 
-- [「仮」 サポートページ](#仮-サポートページ)
+- [「システム制御理論と統計的機械学習」 サポートページ](#仮-サポートページ)
   - [書籍情報](#書籍情報)
   - [追加資料](#追加資料)
     - [正誤表および補足情報](#正誤表および補足情報)
@@ -15,7 +15,7 @@
 - 出版年　2025年
 - ISBN
 - 目次 [.mdファイル](./TOC.md)
-- サポートページ [https://sct4L.github.io/](https://sct4L.github.io/) 
+- サポートページ [https://sct-ml.github.io/](https://sct-ml.github.io/) 
 - 引用情報  
 > 加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
 > Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
