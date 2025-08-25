@@ -15,7 +15,7 @@
 - 出版年　2025年
 - ISBN
 - 目次 [.mdファイル](./TOC.md)
-- サポートページ [https://ctml-book.github.io/](https://ctml-book.github.io/) 
+- サポートページ [https://github.com/ctrl-kuinfo/scml-book](https://github.com/ctrl-kuinfo/scml-book) 
 - 引用情報  
 > 加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
 > Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
@@ -28,7 +28,7 @@
 
 ## 追加資料
 
-最新版および更新履歴はgithubレポジトリ <img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" width="20">  [ctml-book](https://github.com/ctml-book/ctml-book.github.io/) をご参照ください。
+最新版および更新履歴はgithubレポジトリ <img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" width="20">  [ctml-book](https://github.com/ctrl-kuinfo/scml-book) をご参照ください。
 
 ### 正誤表および補足情報
 
