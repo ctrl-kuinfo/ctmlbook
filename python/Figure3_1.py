@@ -3,8 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(100)
@@ -60,7 +58,7 @@ def figure3_1a(k_bar=9):
     ax.set_yticks([-1, -0.5, 0, 0.5, 1])
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_1a.pdf")
+    plt.savefig("./Figure3_1a.pdf")
     plt.show()
 
 
@@ -86,7 +84,7 @@ def figure3_1b(k_bar: int = 50, n_sample: int = 10):
     plt.grid()
     plt.ylim([-1, 1])
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_1b.pdf")
+    plt.savefig("./Figure3_1b.pdf")
     plt.show()
 
 

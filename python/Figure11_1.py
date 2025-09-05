@@ -4,8 +4,6 @@
 import cvxpy as cp
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 def plot_ellipse(Sigma):
@@ -112,7 +110,7 @@ def figure11_1(label="a"):
         ax.set_zlim([-10,10])  
         ax.set_xlim([10,0])  
         plt.tight_layout()
-        plt.savefig("./figures/Figure11_1{}.pdf".format(label))
+        plt.savefig("./Figure11_1{}.pdf".format(label))
         plt.show()
 
 if __name__ == '__main__':

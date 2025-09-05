@@ -3,8 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(24)
@@ -108,7 +106,7 @@ def figure8_2a(k_bar=1000):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure8_2a.pdf")
+    plt.savefig("./Figure8_2a.pdf")
     plt.show()
 
 def figure8_2b(k_bar=5000):
@@ -154,7 +152,7 @@ def figure8_2b(k_bar=5000):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure8_2b.pdf")
+    plt.savefig("./Figure8_2b.pdf")
     plt.show()
 
 def figure8_2cdef(k_bar=100000, label = "c"):
@@ -194,7 +192,7 @@ def figure8_2cdef(k_bar=100000, label = "c"):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure8_2{}.pdf".format(label))
+    plt.savefig("./Figure8_2{}.pdf".format(label))
 
     plt.show()
 

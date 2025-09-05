@@ -5,8 +5,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(33)
@@ -43,7 +41,7 @@ def figure11_5a():
     plt.grid()
     plt.xlabel(r"${\rm p}$")
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_5a.pdf")
+    plt.savefig("./Figure11_5a.pdf")
     plt.show()
 
 def figure11_5b( N_k = 2000):
@@ -79,7 +77,7 @@ def figure11_5b( N_k = 2000):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_5b.pdf")
+    plt.savefig("./Figure11_5b.pdf")
     plt.show()
 
 if __name__ == '__main__':

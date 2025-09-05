@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 from cvxpy import Minimize,Variable,Problem
 from cvxpy.atoms import quad_form,norm
 from matplotlib.ticker import MultipleLocator
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(1)
@@ -95,7 +93,7 @@ def figure7_4(n_data:int=30, n_x:int=100):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure7_4a.pdf")
+    plt.savefig("./Figure7_4a.pdf")
     
     
     # Figure 7.4(b)
@@ -109,7 +107,7 @@ def figure7_4(n_data:int=30, n_x:int=100):
     plt.gca().xaxis.set_major_locator(MultipleLocator(1))
     plt.tight_layout()
     plt.grid()
-    plt.savefig("./figures/Figure7_4b.pdf")
+    plt.savefig("./Figure7_4b.pdf")
 
     plt.show()
 

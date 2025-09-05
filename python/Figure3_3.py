@@ -3,8 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(100)
@@ -37,7 +35,7 @@ def figure3_3a(k_bar:int=50,n_sample:int=20,a:float=0.5):
     plt.xlim([0,k_bar])
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_3a.pdf")
+    plt.savefig("./Figure3_3a.pdf")
     plt.show() 
 
 
@@ -66,7 +64,7 @@ def figure3_3b(k_bar:int=50,n_sample:int=20,a:float=0.5):
     plt.xlim([0,k_bar])
     plt.grid()    
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_3b.pdf")
+    plt.savefig("./Figure3_3b.pdf")
     plt.show() 
 
 if __name__ == '__main__':

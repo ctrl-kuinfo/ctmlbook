@@ -5,8 +5,6 @@
 import control
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(1)
@@ -39,7 +37,7 @@ def figure3_4a(Aw, Bw, Cw):
     plt.grid()
     plt.legend()
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_4a.pdf")
+    plt.savefig("./Figure3_4a.pdf")
     plt.show()
 
 def figure3_4b( Aw, Bw, Cw, k_bar ):
@@ -61,7 +59,7 @@ def figure3_4b( Aw, Bw, Cw, k_bar ):
     plt.legend(loc='upper right')
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure3_4b.pdf")
+    plt.savefig("./Figure3_4b.pdf")
     plt.show()
 
 # Parameters for noise model

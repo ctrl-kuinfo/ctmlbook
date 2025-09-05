@@ -4,7 +4,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-sys.path.append("./")
 import config
 
 np.random.seed(100)
@@ -29,7 +28,7 @@ def figure3_2a(n_k:int=50,n_sample:int=9):
     plt.ylim([-1,1])
     plt.tight_layout()
     plt.grid()
-    plt.savefig("./figures/Figure3_2a.pdf")
+    plt.savefig("./Figure3_2a.pdf")
     plt.show()
 
 def figure3_2b(n_k:int=50,n_sample:int=10):
@@ -55,7 +54,7 @@ def figure3_2b(n_k:int=50,n_sample:int=10):
     plt.ylabel(r'$x_k$')
     plt.tight_layout()
     plt.grid()
-    plt.savefig("./figures/Figure3_2b.pdf")
+    plt.savefig("./Figure3_2b.pdf")
     plt.show()
 
 if __name__ == '__main__':

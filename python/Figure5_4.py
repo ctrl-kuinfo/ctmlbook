@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cvxpy import Variable, Minimize, quad_form, Problem
 from scipy.stats import truncnorm, laplace
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(1)
@@ -133,7 +131,7 @@ def plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar):
         plt.xlim([0,k_bar])
         plt.ylim([-x_max,x_max])
         plt.tight_layout()
-        plt.savefig("./figures/Figure5_4a.pdf")
+        plt.savefig("./Figure5_4a.pdf")
         plt.show()
 
     def figure5_4b():
@@ -147,7 +145,7 @@ def plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar):
         plt.xlim([0,k_bar])
         plt.ylim([-x_max,x_max])
         plt.tight_layout()
-        plt.savefig("./figures/Figure5_4b.pdf")
+        plt.savefig("./Figure5_4b.pdf")
         plt.show()
 
     def figure5_4c():
@@ -161,7 +159,7 @@ def plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar):
         plt.xlim([0,k_bar-1])
         plt.ylim([-x_max,x_max])
         plt.tight_layout()
-        plt.savefig("./figures/Figure5_4c.pdf")
+        plt.savefig("./Figure5_4c.pdf")
         plt.show()
 
     def figure5_4d():
@@ -175,7 +173,7 @@ def plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar):
         plt.xlim([0,k_bar])
         plt.ylim([-x_max,x_max])
         plt.tight_layout()
-        plt.savefig("./figures/Figure5_4d.pdf")
+        plt.savefig("./Figure5_4d.pdf")
         plt.show()
 
     figure5_4a()

@@ -4,8 +4,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm, laplace
-import sys
-sys.path.append("./")
 import config
 
 def figure2_1a():
@@ -29,7 +27,7 @@ def figure2_1a():
     plt.yscale('log')
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("./figures/Figure2_1a.pdf")
+    plt.savefig("./Figure2_1a.pdf")
     plt.show()
 
 def figure2_1b():
@@ -62,7 +60,7 @@ def figure2_1b():
     plt.ylim([0,1])
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("./figures/Figure2_1b.pdf")
+    plt.savefig("./Figure2_1b.pdf")
     plt.show()
 
 if __name__ == '__main__':

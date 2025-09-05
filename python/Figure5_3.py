@@ -5,8 +5,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import control
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(1)  # Random seed
@@ -160,7 +158,7 @@ def figure5_3a(x_true, x_true_k, x_LQRmm, x_LQRm, k_bar):
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
-    plt.savefig("./figures/Figure5_3a.pdf")
+    plt.savefig("./Figure5_3a.pdf")
     plt.show()
 
 def figure5_3b(x_true, x_hat, y, Sigmas, x_check, Sigmac, k_bar):
@@ -181,7 +179,7 @@ def figure5_3b(x_true, x_hat, y, Sigmas, x_check, Sigmac, k_bar):
     plt.tight_layout()
     plt.xlim([0, 100])
     plt.ylim([-0.2, 0.2])
-    plt.savefig("./figures/Figure5_3b.pdf")
+    plt.savefig("./Figure5_3b.pdf")
     plt.show()
 
 def figure5_3c(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
@@ -200,7 +198,7 @@ def figure5_3c(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     plt.tight_layout()
     plt.xlim([0, 100])
     plt.ylim([-x_max, x_max])
-    plt.savefig("./figures/Figure5_3c.pdf")
+    plt.savefig("./Figure5_3c.pdf")
     plt.show()
 
 def figure5_3d(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
@@ -220,7 +218,7 @@ def figure5_3d(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     plt.xlim([0, 100])
     x_max = 2
     plt.ylim([-x_max, x_max])
-    plt.savefig("./figures/Figure5_3d.pdf")
+    plt.savefig("./Figure5_3d.pdf")
     plt.show()
 
 

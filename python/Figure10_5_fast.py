@@ -4,8 +4,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(23)
@@ -149,7 +147,7 @@ def Figure10_5a(value):
     plt.xlim([0, grid_size])
     plt.ylim([0, grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5a.pdf")
+    plt.savefig("./Figure10_5a.pdf")
     plt.show()
 
 def Figure10_5b(value, Tmax=20000):
@@ -167,7 +165,7 @@ def Figure10_5b(value, Tmax=20000):
     plt.xlim([0,grid_size])
     plt.ylim([0,grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5b.pdf")
+    plt.savefig("./Figure10_5b.pdf")
     plt.show()
 
 def Figure10_5c(value, Tmax=20000):
@@ -185,7 +183,7 @@ def Figure10_5c(value, Tmax=20000):
     plt.xlim([0,grid_size])
     plt.ylim([0,grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5c.pdf")
+    plt.savefig("./Figure10_5c.pdf")
     plt.show()
 
 if __name__ == '__main__':

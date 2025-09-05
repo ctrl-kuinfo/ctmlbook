@@ -2,8 +2,6 @@
 # Date  : 2025/09/01
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(23)
@@ -42,7 +40,7 @@ def figure11_4(N_k= 100,label="a"):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_4{}.pdf".format(label))
+    plt.savefig("./Figure11_4{}.pdf".format(label))
     plt.show()
 
 if __name__ == '__main__':

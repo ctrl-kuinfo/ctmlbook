@@ -3,8 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(24)
@@ -52,7 +50,7 @@ def figure7_1a(n_x:int = 100, n_sample:int=20):
     plt.xlim([0,1])
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure7_1a.pdf")
+    plt.savefig("./Figure7_1a.pdf")
     plt.show()
 
 # learning from n_data in one sample trajectory with hyperparameter sigma_sq
@@ -112,7 +110,7 @@ def figure7_1b(n_x:int = 100, n_sample:int=20, n_data:int=8):
     plt.xlim([0,1])
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure7_1b.pdf")
+    plt.savefig("./Figure7_1b.pdf")
     plt.show()
 
 if __name__ == '__main__':

@@ -4,8 +4,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(100)
@@ -33,7 +31,7 @@ def figure4_1a(k_bar:int=50):
     plt.ylabel(r'$x_k$')
     plt.tight_layout()
     plt.grid()
-    plt.savefig("./figures/Figure4_1a.pdf")
+    plt.savefig("./Figure4_1a.pdf")
     plt.show()
 
 def figure4_1b(k_bar:int=50,n_sample:int=20):
@@ -62,7 +60,7 @@ def figure4_1b(k_bar:int=50,n_sample:int=20):
     plt.ylabel(r'$x_k$')
     plt.tight_layout()
     plt.grid()
-    plt.savefig("./figures/Figure4_1b.pdf")
+    plt.savefig("./Figure4_1b.pdf")
     plt.show()
 
 if __name__ == '__main__':

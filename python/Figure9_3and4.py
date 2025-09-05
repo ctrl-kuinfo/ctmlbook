@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_discrete_lyapunov as dlyap
 import control
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(2)
@@ -154,7 +152,7 @@ def plot_results(x_norm_hist_p, K_err_hist_p, Ups_err_hist_p, iter_Gain, label=N
     plt.tight_layout()
     
     if label is not None:
-        plt.savefig("./figures/Figure9_{}.pdf".format(label))
+        plt.savefig("./Figure9_{}.pdf".format(label))
     plt.show()
 
 if __name__ == '__main__':

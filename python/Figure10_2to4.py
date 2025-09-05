@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from matplotlib.ticker import MultipleLocator
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(13)
@@ -67,7 +65,7 @@ def figure10_2b(N_k= 300):
     plt.gca().yaxis.set_major_locator(MultipleLocator(1))
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_2b.pdf")
+    plt.savefig("./Figure10_2b.pdf")
     plt.show()
 
 
@@ -165,7 +163,7 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     plt.gca().yaxis.set_major_locator(MultipleLocator(1))
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_4a.pdf")
+    plt.savefig("./Figure10_4a.pdf")
 
     figsize = config.global_config(type=1)
     plt.figure(figsize=figsize)
@@ -181,7 +179,7 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     plt.legend()
     plt.grid(axis='y')
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_4b.pdf")
+    plt.savefig("./Figure10_4b.pdf")
     plt.show()
 
 if __name__ == '__main__':

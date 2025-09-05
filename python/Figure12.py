@@ -3,8 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(13)
@@ -74,7 +72,7 @@ def figure12_2(N_x= 100, c = 0.1,label="a"):
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure12_2{}.pdf".format(label))
+    plt.savefig("./Figure12_2{}.pdf".format(label))
     plt.show()
 
 def figure12_3(N_x= 100, s_bar = 10, c = 0.1, label="a"):
@@ -126,7 +124,7 @@ def figure12_3(N_x= 100, s_bar = 10, c = 0.1, label="a"):
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure12_3{}.pdf".format(label))
+    plt.savefig("./Figure12_3{}.pdf".format(label))
     plt.show()
     return (x_sample,y_sample)
 
@@ -182,7 +180,7 @@ def figure12_4(N_x= 100, s_bar = 10, label="a", sample0=None):
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure12_4{}.pdf".format(label))
+    plt.savefig("./Figure12_4{}.pdf".format(label))
     plt.show()
 
 if __name__ == '__main__':

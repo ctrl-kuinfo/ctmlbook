@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_discrete_lyapunov
 import control
-import sys
-sys.path.append("./")
 import config
 
 def setup_system_matrices():
@@ -115,7 +113,7 @@ def Figure6_1(beta=0.95, N_iter=11):
     plt.yscale('log')
     plt.xlabel('Iterations')
     plt.tight_layout()
-    plt.savefig("./figures/Figure6_1.pdf")
+    plt.savefig("./Figure6_1.pdf")
     plt.show()
 
 if __name__ == "__main__":

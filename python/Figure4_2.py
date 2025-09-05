@@ -5,8 +5,6 @@
 import control as ctl
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("./")
 import config
 
 np.random.seed(1)
@@ -87,7 +85,7 @@ def figure4_2(k_bar:int = 800, T_c:float=0.01):
     ax[2].axis([0,k_bar,-u_max,u_max])
 
     plt.tight_layout()
-    plt.savefig("./figures/Figure4_2.pdf")
+    plt.savefig("./Figure4_2.pdf")
     plt.show()
     
 if __name__ == '__main__':
