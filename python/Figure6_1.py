@@ -6,9 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_discrete_lyapunov
 import control
-
-import sys
-sys.path.append("./")
 import config
 
 def setup_system_matrices():
@@ -21,13 +18,13 @@ def setup_system_matrices():
     return A, B
 
 
-def initialize_cost_matrices(n_x, n_u):
+def initialize_cost_matrices(x_dim, u_dim):
     """Initialize the cost matrices Q, R, and S."""
-    QRS = np.eye(n_x + n_u)
+    QRS = np.eye(x_dim + u_dim)
     QRS = QRS @ QRS.T  # Ensure QRS is positive definite
-    Q = QRS[:n_x, :n_x]  # Stage cost for states
-    R = QRS[n_x:, n_x:]  # Stage cost for control inputs
-    S = QRS[:n_x, n_x:]  # Cross term between state and control input
+    Q = QRS[:x_dim, :x_dim]  # Stage cost for states
+    R = QRS[x_dim:, x_dim:]  # Stage cost for control inputs
+    S = QRS[:x_dim, x_dim:]  # Cross term between state and control input
     return Q, R, S
 
 
@@ -37,10 +34,10 @@ def optimal_gain(A, B, Q, R, S, beta):
     return P_opt
 
 def value_iteration(A, B, Q, R, S, P_opt, beta, N_iter):
-    n_x = np.shape(A)[0]
+    x_dim = np.shape(A)[0]
     # Initialize error list for Value Iteration
     err_list_VI = np.zeros(N_iter)
-    PI = np.zeros((n_x, n_x))
+    PI = np.zeros((x_dim, x_dim))
     # Value iteration
     i = 1
     while True:
@@ -49,7 +46,7 @@ def value_iteration(A, B, Q, R, S, P_opt, beta, N_iter):
         Qt = Q + beta * A.T @ PI @ A
         K = np.linalg.solve(Rt, St.T)  # Calculate K(Pi)
         if np.sqrt(beta) * np.max(np.abs(np.linalg.eigvals(A - B @ K ))) < 1:
-            print(f"Stablilized after {i} iterations")
+            print(f"Stabilized after {i} iterations")
             break
         i += 1
         PI = Qt - St @ np.linalg.solve(Rt, St.T)  # Pi <- Ric(Pi)
@@ -70,14 +67,14 @@ def value_iteration(A, B, Q, R, S, P_opt, beta, N_iter):
 
 def policy_iteration(A, B, Q, R, S, P_opt, beta, K_ini, PI_ini, N_iter):
     # Policy iteration
-    n_x = np.shape(A)[0]
+    x_dim = np.shape(A)[0]
     err_list_PI = np.zeros(N_iter)
     K = K_ini
     PI = PI_ini
     for i in range(N_iter):
         err_list_PI[i] = np.linalg.norm(P_opt - PI)
-        PI_Q = solve_discrete_lyapunov(np.sqrt(beta) * (A - B * K).T,
-                                    np.block([np.eye(n_x), - K.T]) @ np.block([[Q, S],[S.T, R]]) @ np.block([[np.eye(n_x)],[-K]]))
+        PI_Q = solve_discrete_lyapunov(np.sqrt(beta) * (A - B @ K).T,
+                                    np.block([np.eye(x_dim), - K.T]) @ np.block([[Q, S],[S.T, R]]) @ np.block([[np.eye(x_dim)],[-K]]))
         Rt = R + beta * B.T @ PI_Q @ B
         St = S + beta * A.T @ PI_Q @ B
         Qt = Q + beta * A.T @ PI_Q @ A
@@ -87,14 +84,14 @@ def policy_iteration(A, B, Q, R, S, P_opt, beta, K_ini, PI_ini, N_iter):
     
 def Figure6_1(beta=0.95, N_iter=11):
     #beta = 0.95  # Discount rate for LQR
-    n_x = 3  # Number of state variables
-    n_u = 1  # Number of control iN_iter = 11  # Number of iterations
+    x_dim = 3  # Number of state variables
+    u_dim = 1  # Number of control iN_iter = 11  # Number of iterations
 
     
     # Set up system matrices
     A, B = setup_system_matrices()
     # Initialize cost matrices
-    Q, R, S = initialize_cost_matrices(n_x, n_u)
+    Q, R, S = initialize_cost_matrices(x_dim, u_dim)
     # Compute the optimal gain
     P_opt = optimal_gain(A, B, Q, R, S, beta)
     
@@ -116,7 +113,7 @@ def Figure6_1(beta=0.95, N_iter=11):
     plt.yscale('log')
     plt.xlabel('Iterations')
     plt.tight_layout()
-    plt.savefig("./figures/Figure6_1.pdf")
+    plt.savefig("./Figure6_1.pdf")
     plt.show()
 
 if __name__ == "__main__":

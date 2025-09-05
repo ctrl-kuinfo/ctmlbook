@@ -1,15 +1,13 @@
 # Author: Kenji Kashima
-# Date  : 2025/05/31
+# Date  : 2025/09/01
+# pip install sympy
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
-
-# pip install sympy
+import config
 
 np.random.seed(33)
-import sys
-sys.path.append("./")
-import config
 
 # 関数 L, L1, L2 の定義（記号式）
 p = sp.Symbol('p')
@@ -34,16 +32,16 @@ def figure11_5a():
     figsize = config.global_config(type= 1)
     plt.figure(figsize=figsize)
     p_vals = np.arange(-5,5,0.01)
-    plt.plot(p_vals, L(p_vals), label=r'$L(p)$')
-    plt.plot(p_vals, grad_L(p_vals), label=r'$\nabla L(p)$')
-    plt.plot(p_vals, grad_L1(p_vals), label=r'$\nabla L_1(p)$')
-    plt.plot(p_vals, grad_L2(p_vals), label=r'$\nabla L_2(p)$')
+    plt.plot(p_vals, L(p_vals), label=r'$L({\rm p})$')
+    plt.plot(p_vals, grad_L(p_vals), label=r'$\nabla L({\rm p})$')
+    plt.plot(p_vals, grad_L1(p_vals), label=r'$\nabla L_1({\rm p})$')
+    plt.plot(p_vals, grad_L2(p_vals), label=r'$\nabla L_2({\rm p})$')
     
     plt.legend()
     plt.grid()
-    plt.xlabel(r"$p$")
+    plt.xlabel(r"${\rm p}$")
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_5a.pdf")
+    plt.savefig("./Figure11_5a.pdf")
     plt.show()
 
 def figure11_5b( N_k = 2000):
@@ -79,7 +77,7 @@ def figure11_5b( N_k = 2000):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_5b.pdf")
+    plt.savefig("./Figure11_5b.pdf")
     plt.show()
 
 if __name__ == '__main__':

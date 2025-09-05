@@ -1,12 +1,10 @@
 # Author: Kenji Kashima
-# Date  : 2025/05/31
+# Date  : 2025/09/01
 import numpy as np
 import matplotlib.pyplot as plt
+import config
 
 np.random.seed(23)
-import sys
-sys.path.append("./")
-import config
 
 def figure11_4(N_k= 100,label="a"):
     """
@@ -15,7 +13,6 @@ def figure11_4(N_k= 100,label="a"):
     Parameters:
         N_k : simulation time length.
     """
-    np.random.seed(23)
     figsize = config.global_config(type= 1)
     C = [0.6, 0.6, 1.0, 1.0]        # constants for step size
     alpha = [1.0, 0.3, 1.0, 1.5]    # decay rate for step size
@@ -43,7 +40,7 @@ def figure11_4(N_k= 100,label="a"):
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./figures/Figure11_4{}.pdf".format(label))
+    plt.savefig("./Figure11_4{}.pdf".format(label))
     plt.show()
 
 if __name__ == '__main__':

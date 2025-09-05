@@ -4,10 +4,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-np.random.seed(23)
-import sys
-sys.path.append("./")
 import config
+
+np.random.seed(23)
 
 directions = [(1,0), (-1,0), (0,1), (0,-1)]  # Right, Left, Up, Down
 
@@ -61,19 +60,19 @@ def simulation(value, ini_state, Tmax, deterministic):
 
     Returns:
         ini_state (ndarray): initial agent positions.
-        state (ndarray): final agent positions.
-        x1_list (ndarray): trajectory of x-coordinates (shape: [IDn, t]).
-        x2_list (ndarray): trajectory of y-coordinates (shape: [IDn, t]).
+        state (ndarray): current agent positions.
+        x_list (ndarray): trajectory of x-coordinates (shape: [IDn, t]).
+        y_list (ndarray): trajectory of y-coordinates (shape: [IDn, t]).
     """
 
-    x1_list = np.zeros((IDn, Tmax))
-    x2_list = np.zeros((IDn, Tmax))
+    x_list = np.zeros((IDn, Tmax))
+    y_list = np.zeros((IDn, Tmax))
 
     state = ini_state.copy()
 
     for t in range(Tmax):
-        x1_list[:, t] = state[:, 0]
-        x2_list[:, t] = state[:, 1]
+        x_list[:, t] = state[:, 0]
+        y_list[:, t] = state[:, 1]
 
         # Randomly select an agent and movement direction
         agent_id = np.random.randint(IDn)
@@ -95,8 +94,8 @@ def simulation(value, ini_state, Tmax, deterministic):
                 print(f"Step {t}: Agent {agent_id} moved (deterministic)")
 
                 if all_agents_locally_optimal(state, value, sensor_range):
-                    x1_list = x1_list[:, :t+1]
-                    x2_list = x2_list[:, :t+1]
+                    x_list = x_list[:, :t+1]
+                    y_list = y_list[:, :t+1]
                     print(f"All agents are locally optimal at step {t}. Simulation terminated.")
                     break
         else:
@@ -105,21 +104,21 @@ def simulation(value, ini_state, Tmax, deterministic):
                 state = candidate_state
                 print(f"Step {t}: Agent {agent_id} moved (stochastic)")
 
-    return state, x1_list[:, :t+1], x2_list[:, :t+1]
+    return state, x_list[:, :t+1], y_list[:, :t+1]
 
-def sum_value_near_agents(state, sensor_range, X1, X2, value):
+def sum_value_near_agents(state, sensor_range, X, Y, value):
     """
-    Vectorized version. Returns the sum of value[I, J] around (X1, X2)
+    Vectorized version. Returns the sum of value[I, J] around (X, Y)
     where at least one agent is within 'sensor_range' of (I, J).
     """
     evaluation_range = int(sensor_range + 3)
-    X1, X2 = int(X1), int(X2)
+    X, Y = int(X), int(Y)
 
     # 定義域の切り出し（境界考慮）
-    I_min = max(1, X1 - evaluation_range)
-    I_max = min(grid_size, X1 + evaluation_range) + 1
-    J_min = max(1, X2 - evaluation_range)
-    J_max = min(grid_size, X2 + evaluation_range) + 1
+    I_min = max(1, X - evaluation_range)
+    I_max = min(grid_size, X + evaluation_range) + 1
+    J_min = max(1, Y - evaluation_range)
+    J_max = min(grid_size, Y + evaluation_range) + 1
 
     # 対象グリッド座標をベクトルで生成
     I, J = np.meshgrid(np.arange(I_min, I_max), np.arange(J_min, J_max), indexing='ij')
@@ -148,43 +147,43 @@ def Figure10_5a(value):
     plt.xlim([0, grid_size])
     plt.ylim([0, grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5a.pdf")
+    plt.savefig("./Figure10_5a.pdf")
     plt.show()
 
 def Figure10_5b(value, Tmax=20000):
     figsize = config.global_config(type= 1)
     # Figure 10.5(b): Run simulation with deterministic=False
-    state, x1_list, x2_list = simulation(value, ini_state, Tmax, False)
+    state, x_list, y_list = simulation(value, ini_state, Tmax, False)
     plt.figure(figsize=figsize)
     plt.plot(ini_state[:, 0], ini_state[:, 1], '*', markersize=10)
     plt.plot(state[:, 0], state[:, 1], 'o', markersize=10)
     t = np.linspace(0, 2 * np.pi, 100)
     for i in range(IDn):
-        plt.plot(x1_list[i, :], x2_list[i, :])
+        plt.plot(x_list[i, :], y_list[i, :])
         plt.plot(10 * np.sin(t) + state[i, 0], 10 * np.cos(t) + state[i, 1])
     plt.grid(True)
     plt.xlim([0,grid_size])
     plt.ylim([0,grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5b.pdf")
+    plt.savefig("./Figure10_5b.pdf")
     plt.show()
 
 def Figure10_5c(value, Tmax=20000):
     figsize = config.global_config(type= 1)
     # Figure 10.5(c): Run simulation with deterministic=True
-    state, x1_list, x2_list = simulation(value, ini_state, Tmax, True)
+    state, x_list, y_list = simulation(value, ini_state, Tmax, True)
     plt.figure(figsize=figsize)
     plt.plot(ini_state[:, 0], ini_state[:, 1], '*', markersize=10)
     plt.plot(state[:, 0], state[:, 1], 'o', markersize=10)
     t = np.linspace(0, 2 * np.pi, 100)
     for i in range(IDn):
-        plt.plot(x1_list[i, :], x2_list[i, :])
+        plt.plot(x_list[i, :], y_list[i, :])
         plt.plot(10 * np.sin(t) + state[i, 0], 10 * np.cos(t) + state[i, 1])
     plt.grid(True)
     plt.xlim([0,grid_size])
     plt.ylim([0,grid_size])
     plt.tight_layout()
-    plt.savefig("./figures/Figure10_5c.pdf")
+    plt.savefig("./Figure10_5c.pdf")
     plt.show()
 
 if __name__ == '__main__':

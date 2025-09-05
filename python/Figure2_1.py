@@ -4,12 +4,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm, laplace
-import sys
-sys.path.append("./")
 import config
 
 def figure2_1a():
-    """Generates Figure 2.1(a)"""
     figsize = config.global_config(type=1)
     x = np.linspace(0, 10, 1000)
     
@@ -30,11 +27,10 @@ def figure2_1a():
     plt.yscale('log')
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("./figures/Figure2_1a.pdf")
+    plt.savefig("./Figure2_1a.pdf")
     plt.show()
 
 def figure2_1b():
-    """Generates Figure 2.1(b)"""
     figsize = config.global_config(type=1)
     x = np.linspace(-10, 10, 1000)
 
@@ -64,7 +60,7 @@ def figure2_1b():
     plt.ylim([0,1])
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("./figures/Figure2_1b.pdf")
+    plt.savefig("./Figure2_1b.pdf")
     plt.show()
 
 if __name__ == '__main__':
