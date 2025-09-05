@@ -3,16 +3,15 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-np.random.seed(24)
 import sys
 sys.path.append("./")
 import config
 
+np.random.seed(24)
+
 def phi(x:float)->np.ndarray:
     '''
         Feature mapping
-    
         x - input
     '''
     return  np.array([1, x, x**2, x**3, x**4, 
@@ -30,8 +29,7 @@ def f_true(x:float)->float:
 
 def figure7_1a(n_x:int = 100, n_sample:int=20):
     '''
-        n_x - numer of x-grid for plot
-
+        n_x - number of x-grid for plot
         n_sample - number of sample functions
     '''
     figsize = config.global_config(type=1)
@@ -42,7 +40,7 @@ def figure7_1a(n_x:int = 100, n_sample:int=20):
         X[:,i] = phi(x_p[i]) 
 
     plt.figure(figsize=figsize)
-    plt.plot(x_p, (np.zeros([1,n_f]) @ X).flatten(), linewidth= 3)
+    plt.plot(x_p, np.zeros_like(x_p), linewidth=3)
 
     for _ in range (n_sample):
         theta = np.random.randn(n_f)      
@@ -61,7 +59,6 @@ def figure7_1a(n_x:int = 100, n_sample:int=20):
 def learn_theta(sigma_sq,n_data):
     '''
         sigma_sq - simulation for several weights (=standard deviation)^2
-        
         n_data - number of data
     '''
     x = np.linspace(0,1,n_data)
@@ -84,9 +81,7 @@ def learn_theta(sigma_sq,n_data):
 def figure7_1b(n_x:int = 100, n_sample:int=20, n_data:int=8):
     '''
         n_x - numer of x-grid for plot
-
         n_sample - number of sample functions
-
         n_data - number of data
     '''
     figsize = config.global_config(type=1)

@@ -3,16 +3,15 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-np.random.seed(100)
 import sys
 sys.path.append("./")
 import config
 
+np.random.seed(100)
+
 def figure3_2a(n_k:int=50,n_sample:int=9):
     '''
         n_k - total steps
-
         n_sample - number of samples
     '''
     figsize = config.global_config(type=1)
@@ -36,7 +35,6 @@ def figure3_2a(n_k:int=50,n_sample:int=9):
 def figure3_2b(n_k:int=50,n_sample:int=10):
     '''
         n_k - total steps
-
         n_sample - number of samples
     '''
     figsize = config.global_config(type=1)

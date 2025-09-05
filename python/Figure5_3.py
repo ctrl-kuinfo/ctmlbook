@@ -4,11 +4,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import control
 import sys
 sys.path.append("./")
 import config
+
 np.random.seed(1)  # Random seed
-x_max = 6
+x_max = 1/2
 
 def lqr_control(A, B_u, Q, R, Qf, k_bar):
     """
@@ -52,7 +54,7 @@ def lqr_control(A, B_u, Q, R, Qf, k_bar):
     return K, Sigma
 
 
-def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, Rv=1.0, v=None, w=None):
+def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=1e-4, Rv=1.0, v=None, w=None):
     """
     Simulate LQG controller using Algorithm 1 order
     Records true state, state estimates, inputs, measurements, and covariance
@@ -60,12 +62,12 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, R
     Parameters
     ----------
     A, B_u, B_v, C : system matrices
-    mu             : Inistial mean estimate
-    Sigma          : Inistial covariance
+    mu             : Initial mean estimate
+    Sigma          : Initial covariance
     K              : list of finite-horizon LQR gains K[k]
     k_bar          : horizon length
     x0             : initial state vector
-    mode           : 'lqr', 'lqg_kalman', or 'lqg_pred'
+    mode           : 'lqr', 'lqg_kalman', 'lqg_pred', or 'lqr_m'
     Rw, Rv         : measurement and process noise covariances
     v              : optional pre-generated process noise sequence
     w              : optional pre-generated observation noise sequence
@@ -83,11 +85,10 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, R
     nx = A.shape[0]
 
     # Generate noise sequences if not provided
-    w = np.sqrt(Rw) * np.random.randn(k_bar)  # measurement noise w_k ~ N(0, Rw)
     if v is None:
         v = np.sqrt(Rv) * np.random.randn(k_bar)  # process noise v_k ~ N(0, Rv)
     if w is None:
-        w = np.sqrt(Rw) * np.random.randn(k_bar)  # observation noise w_k ~ N(0, Rv)
+        w = np.sqrt(Rw) * np.random.randn(k_bar)  # observation noise w_k ~ N(0, Rw)
 
     # Allocate containers
     x_true  = np.zeros((nx, k_bar + 1))
@@ -107,35 +108,35 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, R
     for k in range(k_bar):
         # If perfect state measurement (LQR)
         if mode == 'lqr':
-            u[k] = -K[k] @ x_true[:, k]
+            u[k] = (-K[k] @ x_true[:, k]).item()
         else:
             # For prediction mode, use prior estimate
             if mode == 'lqg_pred':
-                u[k] = -K[k] @ x_hat[:, k]
+                u[k] = (-K[k] @ x_hat[:, k]).item()
 
             # 1) Receive measurement y_k
-            y[k] = C @ x_true[:, k] + w[k]
+            y[k] = (C @ x_true[:, k] + w[k]).item()
 
-            # 2) Compute Kalman gain components: M̃_k, Ľ_k, Ȟ_k
+            # 2) Compute Kalman gain components: M̃_k, Ľ_k, Ȟ_k
             M_tilde  = C @ Sigma @ C.T + Rw      # innovation covariance
             L_check  = Sigma @ C.T               # cross-covariance
-            H_check  = L_check @ np.linalg.inv(M_tilde)  # Kalman gain
+            H_check  = np.linalg.solve(M_tilde, L_check.T).T # Kalman gain
 
             # 3) Posterior update of state estimate x̌_k
-            innov    = y[k] - C @ x_hat[:, k]
+            innov    = y[k] - (C @ x_hat[:, k]).item()
             x_check[:, k]  = x_hat[:, k] + H_check.flatten() * innov
 
             # 4) Posterior covariance Σ̌_k
-            Sigma_check = Sigma - L_check @ np.linalg.inv(M_tilde) @ L_check.T
+            Sigma_check = Sigma - H_check @ L_check.T
             Sigmac[:, :, k] = Sigma_check
 
             # Choose input using updated estimate for LQG
             if mode == 'lqg_kalman':
-                u[k] = -K[k] @ x_check[:, k]
+                u[k] = (-K[k] @ x_check[:, k]).item()
 
             # 5) Time update (prior for next step)
             x_hat[:, k+1] = (A @ x_check[:,k].reshape(nx,1) + B_u * u[k]).flatten()
-            Sigma = A @ Sigma_check @ A.T + Rv * np.eye(nx)
+            Sigma = A @ Sigma_check @ A.T + Rv * (B_v @ B_v.T)
 
         # 6) Propagate true system
         x_true[:, k+1] = (A @ x_true[:, k].reshape(nx,1) + B_u * u[k] + B_v * v[k]).flatten()
@@ -144,16 +145,14 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=4.0, R
     return x_true, x_hat, u, y, Sigmas, x_check, Sigmac
 
 
-def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
+def figure5_3a(x_true, x_true_k, x_LQRmm, x_LQRm, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
-    plt.figure(figsize=figsize)
-    plt.plot(t, x_LQR[2], 'k', label='$(x_k)_3$ (LQR)')
-    plt.plot(t, x_true[2], 'b', label='$(x_k)_3$ (LQG)')
-    sd = np.sqrt(Sigmas[2, 2])
-    plt.plot(t, x_true_k[2], 'r', label='$(x_k)_3$ (LQG Kalman)')
-    sd = np.sqrt(Sigmas[2, 2])
-    # plt.fill_between(t, x_true[2] - sd, x_true[2] + sd, color='blue', alpha=0.2)
+    plt.figure(figsize = figsize)
+    plt.plot(t, x_LQRm[0], 'k--', label='LQR (white noise)')
+    plt.plot(t, x_LQRmm[0], 'k', label='LQR')
+    plt.plot(t, x_true[0], 'b', label='LQG')
+    plt.plot(t, x_true_k[0], 'r', label='LQG Kalman')
 
     plt.xlabel('$k$')
     plt.legend()
@@ -161,8 +160,6 @@ def figure5_3a(x_LQR, x_true, Sigmas, k_bar):
     plt.tight_layout()
     plt.xlim([0, k_bar])
     plt.ylim([-x_max, x_max])
-
-    plt.tight_layout()
     plt.savefig("./figures/Figure5_3a.pdf")
     plt.show()
 
@@ -171,122 +168,166 @@ def figure5_3b(x_true, x_hat, y, Sigmas, x_check, Sigmac, k_bar):
     t = np.arange(k_bar + 1)
     t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
-    plt.plot(t, x_true[0], 'b', label='True $(x_k)_1$')
-    plt.plot(t_c, y, 'r', label='Measurements $y_k$')
-    plt.plot(t, x_hat[0], 'b--', label='Estimate $(\hat x_k)_1$')
-    sd = np.sqrt(Sigmas[0, 0])
+    plt.plot(t, x_true[0], 'b', label='Position')
+    plt.plot(t_c, y, 'r', label='Measurements')
+    plt.plot(t, x_hat[0], 'b--', label='Estimate')
+    sd = np.sqrt(Sigmas[0, 0, :])
     plt.fill_between(t, x_hat[0] - sd, x_hat[0] + sd, color='blue', alpha=0.2)
 
-    # #  Plot corrected estimate
-    # sd_c = np.sqrt(Sigmac[0, 0])
-    # plt.plot(t_c, x_check[0], 'r--', label='Corrected estimate $(\check x_k)_1$')
-    # plt.fill_between(t_c, x_check[0] - sd_c, x_check[0] + sd_c, color='red', alpha=0.2)
-
+    # Plot corrected estimate
     plt.xlabel('$k$')
     plt.legend(loc='upper right')
     plt.grid()
     plt.tight_layout()
-    plt.xlim([0, k_bar])
-    plt.ylim([-x_max, x_max])
-
-    plt.tight_layout()
+    plt.xlim([0, 100])
+    plt.ylim([-0.2, 0.2])
     plt.savefig("./figures/Figure5_3b.pdf")
     plt.show()
 
 def figure5_3c(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
-    t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
-    plt.plot(t, x_true[1], 'b', label='True $(x_k)_2$')
-    plt.plot(t, x_hat[1], 'b--', label='Estimate $(\hat x_k)_2$')
-    sd = np.sqrt(Sigmas[1, 1])
+    plt.plot(t, x_true[1], 'b', label='Velocity')
+    plt.plot(t, x_hat[1], 'b--', label='Estimate')
+    sd = np.sqrt(Sigmas[1, 1, :])
     plt.fill_between(t, x_hat[1] - sd, x_hat[1] + sd, color='blue', alpha=0.2)
 
-    ## Plot corrected estimate
-    # sd_c = np.sqrt(Sigmac[1, 1])
-    # plt.plot(t_c, x_check[1], 'r', label='Corrected estimate $(\check x_k)_2$')
-    # plt.fill_between(t_c, x_check[1] - sd_c, x_check[1] + sd_c, color='red', alpha=0.2)
-
+    # Plot corrected estimate
     plt.xlabel('$k$')
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.xlim([0, k_bar])
+    plt.xlim([0, 100])
     plt.ylim([-x_max, x_max])
-
-    plt.tight_layout()
     plt.savefig("./figures/Figure5_3c.pdf")
     plt.show()
 
 def figure5_3d(x_true, x_hat, Sigmas, x_check, Sigmac, k_bar):
     figsize = config.global_config(type=0)
     t = np.arange(k_bar + 1)
-    t_c = np.arange(k_bar)
     plt.figure(figsize=figsize)
-    plt.plot(t, x_true[2], 'b', label='True $(x_k)_3$')
-    plt.plot(t, x_hat[2], 'b--', label='Estimate $(\hat x_k)_3$')
-    sd = np.sqrt(Sigmas[2, 2])
+    plt.plot(t, x_true[2], 'b', label='Colored noise')
+    plt.plot(t, x_hat[2], 'b--', label='Estimate')
+    sd = np.sqrt(Sigmas[2, 2, :])
     plt.fill_between(t, x_hat[2] - sd, x_hat[2] + sd, color='blue', alpha=0.2)
 
-    ## Plot corrected estimate
-    # sd_c = np.sqrt(Sigmac[2, 2])
-    # plt.plot(t_c, x_check[2], 'r', label='Corrected estimate $(\check x_k)_3$')
-    # plt.fill_between(t_c, x_check[2] - sd_c, x_check[2] + sd_c, color='red', alpha=0.2)
-
+    # Plot corrected estimate
     plt.xlabel('$k$')
     plt.legend()
     plt.grid()
     plt.tight_layout()
-    plt.xlim([0, k_bar])
+    plt.xlim([0, 100])
+    x_max = 2
     plt.ylim([-x_max, x_max])
-
-    plt.tight_layout()
     plt.savefig("./figures/Figure5_3d.pdf")
     plt.show()
 
 
-# Define system matrices
-A = np.array([[0.40, 0.37, 0.09],
-              [0.52, 0.66, 0.15],
-              [0.21, 0.66, 0.04]])  
-B_u = np.array([[0], [1], [0]])  # Control input matrix
-B_v = np.array([[1], [0], [0]])  # Disturbance input matrix (noise)
-C = np.array([[1, 0, 0]])        # Output matrix
+def create_double_integrator(Ts):
+    """
+    Create discrete-time double integrator P = 1/s^2
+    State: [position, velocity]
+    """
+    A_c = np.array([[0, 1], [0, 0]])
+    B_c = np.array([[0], [1]])
+    C_c = np.array([[1, 0]])
+    P_c = control.StateSpace(A_c, B_c, C_c, 0)
+    P_d = control.c2d(P_c, Ts, method='zoh')
+    return P_d.A, P_d.B, P_d.C
+
+def create_noise_model(Ts):
+    # --- 1. Noise Model Normalization ---
+    # Continuous-time noise model F = 1/(s+0.3)
+    s = control.TransferFunction.s
+    F_c = 1 / (s + 0.3)
+    F_ss = control.ss(F_c)
+    F_d = control.c2d(F_ss, Ts, method='tustin')
+    Aw, Bw, Cw = F_d.A, F_d.B, F_d.C
+
+    # --- 2. Noise Model Normalization ---
+    # Solve discrete Lyapunov equation: P = A * P * A^T + B * B^T
+    Pw = control.dlyap(Aw, Bw @ Bw.T)
+    variance_amplification = (Cw @ Pw @ Cw.T)[0, 0]  # Scalar variance
+    Bw = Bw / np.sqrt(variance_amplification)
+
+    return Aw, Bw, Cw
+
+
+# --- 1. System and Noise Model Setup ---
+Ts = 0.1
+Aw, Bw, Cw = create_noise_model(Ts)
+nw = Aw.shape[0]
+A_r, B_r, C_r = create_double_integrator(Ts)
+nr = A_r.shape[0]
+
+# --- 2. Augmented State-Space Model Construction ---
+A = np.block([
+    [A_r,                 B_r @ Cw],
+    [np.zeros((nw, nr)),  Aw]
+]) 
+B_u = np.vstack([B_r, np.zeros((nw,1)) ])  # Control input matrix
+B_v = np.vstack([np.zeros((nr,1)), Bw])    # Disturbance input matrix (noise)
+C = np.block([ C_r, np.zeros((1,nw)) ])    # Output matrix
 nx = A.shape[0]
 
+# --- 3. LQR and Noise Parameter Definition ---
 # LQR parameters
-Q = np.diag([0, 0, 1])           # State cost matrix
-R = 1                             # Control input cost
-Qf = np.eye(3)                   # Final state cost
-k_bar = 60                        # Total time steps
+Q = np.diag([1, 10] + list(np.zeros(nw)))   # State cost matrix
+R = 1e-4                                     # Control input cost
+Qf = Q                                       # Final state cost
+k_bar = 300                                  # Total time steps
 
 # Noise properties
-Rv = 1                           # Process noise covariance (v_k ~ N(0, 1))
-Rw = 4                            # Measurement noise covariance (w_k ~ N(0, 4))
+Rv = 1                                       # Process noise covariance (v_k ~ N(0, 1))
+Rw = 1e-4                                    # Measurement noise covariance (w_k ~ N(0, 1e-4))
 
+# --- 4. Initial State and Noise Sequence Generation ---
 # process noise v_k ~ N(0, Rv) 
 process_noise = np.sqrt(Rv) * np.random.randn(k_bar)          
 # observation noise w_k ~ N(0, Rw) 
 obs_noise = np.sqrt(Rw) * np.random.randn(k_bar)
 
+# Initial state
+mu = np.zeros(nx)    # initial mean
+Sigma = np.eye(nx)   # initial covariance
+x0 = np.random.multivariate_normal( mu, Sigma )*0.1   # Initial state x0 ~ N(mu, Sigma)
+
+# --- 5. LQR Gain Calculation ---
 # Compute LQR feedback gains
 K, P = lqr_control(A, B_u, Q, R, Qf, k_bar)
 
-# Initial state
-mu = np.zeros(nx)   # initial mean
-Sigma = 25*np.eye(nx)  # initial covariance
-x0 = np.random.multivariate_normal( mu, Sigma)  # Initial state x0 ~ N(mu, Sigma)
+# Compute LQR feedback gains assuming white noise
+K_lqr, P_lqr = lqr_control(A_r, B_r, Q[0:2,0:2], R, Qf[0:2,0:2], k_bar)
 
+# --- 6. Simulation Execution ---
 # Simulate LQR (no Σ needed) and LQG controllers
-x_LQR, u_LQR, _, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqr',  Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+
+# LQG optimal w/ one-step prediction (colored noise)
 x_true, x_hat_LQG, u, y, Sigmas, x_check, Sigmac = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqg_pred', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+
+# LQG optimal w/ Kalman filtering (colored noise)
 x_true_k, x_hat_LQG_k, u_k, y_k, Sigmas_k, x_check_k, Sigmac_k = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode='lqg_kalman', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+
+# LQR optimal (white noise)
+x_LQRm, _, u_LQRm, _, _, _, _  = simulate_lq_control(A_r, B_r, B_r, C_r, mu[0:2], Sigma[0:2,0:2], K_lqr, k_bar, x0[0:2], mode='lqr', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
+
+# LQR optimal (colored noise)
+K_lqr_aug = [np.pad(Ki, ((0,0),(0, nx - Ki.shape[1])), mode='constant') for Ki in K_lqr]    # Pad K to match dimensions
+x_LQRmm, _, u_LQRmm, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K_lqr_aug, k_bar, x0, mode='lqr', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
 
 
 if __name__ == '__main__':
-    # Plot the results with ±1σ shading
-    figure5_3a(x_LQR, x_true, Sigmas, k_bar)
+    figure5_3a(x_true, x_true_k, x_LQRmm, x_LQRm, k_bar)
     figure5_3b(x_true, x_hat_LQG, y, Sigmas, x_check, Sigmac, k_bar)
     figure5_3c(x_true, x_hat_LQG, Sigmas, x_check, Sigmac, k_bar)
     figure5_3d(x_true, x_hat_LQG, Sigmas, x_check, Sigmac, k_bar)
+    
+    # print('performance matched LQR')
+    # print(x_LQRm[0].T @ x_LQRm[0] + u_LQRm.T @ u_LQRm*R)
+    # print('performance mismatched LQR')
+    # print(x_LQRmm[0].T @ x_LQRmm[0] + u_LQRmm.T @ u_LQRmm*R)
+    # print('performance LQG')
+    # print(x_true[0].T @ x_true[0] + u.T @ u*R)
+    # print('performance LQG Kalman')
+    # print(x_true_k[0].T @ x_true_k[0] + u_k.T @ u_k*R)

@@ -4,30 +4,30 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-np.random.seed(100)
 import sys
 sys.path.append("./")
 import config
+
+np.random.seed(100)
 
 a = 1.1;        # system matrix
 alpha = -0.2;   # parameter in control law
 x_max = 5;      # view range
 
-def figure4_1a(n_k:int=50):
+def figure4_1a(k_bar:int=50):
     '''
-        n_k - total steps
+        k_bar - total steps
     '''
     figsize = config.global_config(type=1)
     
-    x = np.ones(n_k+1)       # state with v=0
-    for k in range(n_k):
+    x = np.ones(k_bar+1)       # state with v=0
+    for k in range(k_bar):
         u = alpha * (a + alpha) ** k  # control law
         x[k+1] = a * x[k] + u
     
     plt.figure(figsize=figsize)
     plt.plot(x,linewidth=1,color=[0,0,0])
-    plt.xlim([0,n_k])
+    plt.xlim([0,k_bar])
     plt.ylim([-x_max,x_max])
     plt.xlabel(r'$k$')
     plt.ylabel(r'$x_k$')
@@ -36,17 +36,16 @@ def figure4_1a(n_k:int=50):
     plt.savefig("./figures/Figure4_1a.pdf")
     plt.show()
 
-def figure4_1b(n_k:int=50,n_sample:int=20):
+def figure4_1b(k_bar:int=50,n_sample:int=20):
     '''
-        n_k - total steps
-
+        k_bar - total steps
         n_sample - number of samples
     '''
     figsize = config.global_config(type=1)
 
-    x = np.ones(n_k+1)       # state with v=0
-    x_v = np.ones([n_sample,n_k+1]) # state with v~N(0,1)
-    for k in range(n_k):
+    x = np.ones(k_bar+1)       # state with v=0
+    x_v = np.ones([n_sample,k_bar+1]) # state with v~N(0,1)
+    for k in range(k_bar):
         v = np.random.randn(n_sample) # n_sample independent standard normal distributions
         u = alpha * (a + alpha) ** k  # control law
         x[k+1] = a * x[k] + u
@@ -57,7 +56,7 @@ def figure4_1b(n_k:int=50,n_sample:int=20):
         plt.plot(x_v[i,:],linewidth=0.2,color=[0.7,0.7,0.7])
 
     plt.plot(x,linewidth=1,color=[0,0,0])
-    plt.xlim([0,n_k])
+    plt.xlim([0,k_bar])
     plt.ylim([-x_max,x_max])
     plt.xlabel(r'$k$')
     plt.ylabel(r'$x_k$')
@@ -67,5 +66,5 @@ def figure4_1b(n_k:int=50,n_sample:int=20):
     plt.show()
 
 if __name__ == '__main__':
-    figure4_1a(n_k=50)
-    figure4_1b(n_k=50,n_sample=20)
+    figure4_1a(k_bar=50)
+    figure4_1b(k_bar=50,n_sample=20)

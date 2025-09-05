@@ -1,16 +1,16 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2025/09/01
 # Note  : pip install cvxpy
 
 import numpy as np
 import matplotlib.pyplot as plt
 from cvxpy import Variable, Minimize, quad_form, Problem
 from scipy.stats import truncnorm, laplace
-
-np.random.seed(1)
 import sys
 sys.path.append("./")
 import config
+
+np.random.seed(1)
 
 # System matrices and parameters setup
 def initialize_matrices():
@@ -31,20 +31,22 @@ def initialize_matrices():
 
 # Generate system dynamics and noise
 def generate_data(A, B_v, C, mu_0, sigma_0, k_bar):
+
+    x_dim = A.shape[0]
     # Noise parameters
     v_bounds = [-1, 1]  # Range for process noise v_k (truncated Gaussian)
     laplace_scale = 1  # Scale parameter for Laplace noise w_k
 
     # Generate the data sequence for x and y
     x = np.random.multivariate_normal(mu_0, sigma_0)  # Initial state x_0 ~ N(mu_0, I)
-    x_data = np.zeros((3, k_bar+1))  # Store x_{0:k_bar}
+    x_data = np.zeros((x_dim, k_bar+1))  # Store x_{0:k_bar}
     y_data = np.zeros(k_bar+1)  # Store y_{0:k_bar}
 
     x_data[:, 0] = x
 
     # Process noise and measurement noise
-    v_list = []
-    w_list = []
+    v_data = []
+    w_data = []
 
     for k in range(k_bar):
         # Generate truncated standard Gaussian noise v_k bounded in [-1, 1]
@@ -54,32 +56,31 @@ def generate_data(A, B_v, C, mu_0, sigma_0, k_bar):
         w_k = laplace.rvs(scale=laplace_scale)
 
         # Update the system dynamics
-        y_data[k] = C @ x + w_k  # Output measurement y_k
-        x = A @ x.reshape(3, 1) + B_v * v_k  # State update x_{k+1}
+        y_data[k] = (C @ x).item() + w_k  # Output measurement y_k
+        x = A @ x.reshape(x_dim, 1) + B_v * v_k  # State update x_{k+1}
 
         # Store the values for future use
         x_data[:, k+1] = x.flatten()
-        v_list.append(v_k)
-        w_list.append(w_k)
+        v_data.append(v_k)
+        w_data.append(w_k)
 
     # The last measurement noise w_{k_bar}
     w_k = laplace.rvs(scale=laplace_scale)
-    w_list.append(w_k)
-    y_data[k_bar] = C @ x + w_k
+    w_data.append(w_k)
+    y_data[k_bar] = (C @ x).item() + w_k
 
-    return x_data, y_data, v_list, w_list
+    return x_data, y_data, v_data, w_data
 
 # Solve the optimization problem using cvxpy
 def solve_optimization(A, B_v, C, mu_0, k_bar, y_data):
-    n_l1 = k_bar + 1
-
+    x_dim = A.shape[0]
     # Define optimization variables
-    x0 = Variable(3)
-    u = Variable(k_bar)
-    t = Variable(n_l1)
+    x0 = Variable(x_dim)
+    u = Variable(k_bar)     
+    t = Variable(k_bar + 1)      # | xhat - y_data[i] |
 
     # Quadratic objective
-    Q_x0 = np.eye(3)
+    Q_x0 = np.eye(x_dim)
     Q_u = np.eye(k_bar)
 
     # Objective: 1/2 * ||x0 - mu0||^2 + sum t_i
@@ -88,16 +89,16 @@ def solve_optimization(A, B_v, C, mu_0, k_bar, y_data):
     # Constraints: L1 norm and control input bounds
     constraints = []
 
-    # L1 norm constraints
-    Aux1 = np.zeros((k_bar + 1, 3))
+    # Aux1 @ x0_est + Aux2 @ u_est = C xhat
+    Aux1 = np.zeros((k_bar + 1, x_dim))
     Aux2 = np.zeros((k_bar + 1, k_bar))
+    for i in range(k_bar + 1): 
+        Aux1[i, :] = (C @ np.linalg.matrix_power(A, i)).ravel()
+        for j in range(i):   # j=0..i-1
+            Aux2[i, j] = (C @ np.linalg.matrix_power(A, i-1-j) @ B_v).item()
 
-    for i in range(1, k_bar + 1):
-        Aux1[i-1, :] = C @ np.linalg.matrix_power(A, i-1)
-        for j in range(i-1):
-            Aux2[i-1, j] = C @ np.linalg.matrix_power(A, i-j-2) @ B_v
-
-    for i in range(n_l1):
+    # L1 norm constraints     
+    for i in range(k_bar + 1):
         constraints += [Aux1[i, :] @ x0 + Aux2[i, :] @ u <= y_data[i] + t[i],
                         -Aux1[i, :] @ x0 - Aux2[i, :] @ u <= -y_data[i] + t[i]]
 
@@ -109,17 +110,23 @@ def solve_optimization(A, B_v, C, mu_0, k_bar, y_data):
     prob = Problem(objective, constraints)
     prob.solve(verbose=True)
 
-    return x0.value, u.value, t.value, Aux1, Aux2
+    # Recover state estimates
+    xhat = np.zeros((x_dim, k_bar + 1))
+    xhat[:, 0] = x0.value
+    for k in range(k_bar):
+        xhat[:, k+1] = (A @ xhat[:, k].reshape(x_dim,1) + B_v * u.value[k]).ravel()
+
+    return u.value, xhat
 
 # Plot figures
-def plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_bar):
+def plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar):
     x_max = 6
     def figure5_4a():
         figsize = config.global_config(type=0)
         plt.figure(figsize=figsize)
         plt.plot(range(k_bar+1), x_data[0, :], label=r'True state $(x_k)_1$', linewidth=1.5)
         plt.plot(range(k_bar+1), y_data, 'g--', label=r'Measurements $y$', linewidth=1.5)
-        plt.plot(range(k_bar+1), Aux1 @ x0_est + Aux2 @ u_est, 'r-.', label=r'Estimated $(\hat{x}_k)_1$', linewidth=1.5)
+        plt.plot(range(k_bar+1), xhat[0, :], 'r-.', label=r'Estimated $(\hat{x}_k)_1$', linewidth=1.5)
         plt.xlabel(r'$k$')
         plt.legend()
         plt.grid(True)
@@ -133,7 +140,7 @@ def plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_ba
         figsize = config.global_config(type=0)
         plt.figure(figsize=figsize)
         plt.plot(range(k_bar+1), x_data[2, :], label=r'True state $(x_k)_3$', linewidth=1.5)
-        plt.plot(range(k_bar+1), Aux1 @ x0_est + Aux2 @ u_est, 'r-.', label=r'Estimated $(\hat{x}_k)_3$', linewidth=1.5)
+        plt.plot(range(k_bar+1), xhat[2, :], 'r-.', label=r'Estimated $(\hat{x}_k)_3$', linewidth=1.5)
         plt.xlabel(r'$k$')
         plt.legend()
         plt.grid(True)
@@ -146,8 +153,8 @@ def plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_ba
     def figure5_4c():
         figsize = config.global_config(type=0)
         plt.figure(figsize=figsize)
-        plt.step(range(k_bar), v_list, label=r'Disturbance $v_k$', linewidth=1.5)
-        plt.step(range(k_bar), u_est, 'r-.', label=r'Estimated $\hat{v}_k:=u_k$', linewidth=1.5)
+        plt.step(range(k_bar), v_data, label=r'Disturbance $v_k$', linewidth=1.5)
+        plt.step(range(k_bar), u_est, 'r-.', label=r'Estimated $\hat{v}_k:=u(k)$', linewidth=1.5)
         plt.xlabel(r'$k$')
         plt.legend()
         plt.grid(True)
@@ -160,8 +167,8 @@ def plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_ba
     def figure5_4d():
         figsize = config.global_config(type=0)
         plt.figure(figsize=figsize)
-        plt.step(range(k_bar+1), w_list, label=r'Noise $w_k$', linewidth=1.5)
-        plt.step(range(k_bar+1), y_data - Aux1 @ x0_est - Aux2 @ u_est, 'r-.', label=r'Estimated $\hat{w}_k$', linewidth=1.5)
+        plt.step(range(k_bar+1), w_data, label=r'Noise $w_k$', linewidth=1.5)
+        plt.step(range(k_bar+1), y_data - xhat[0, :], 'r-.', label=r'Estimated $\hat{w}_k$', linewidth=1.5)
         plt.xlabel(r'$k$')
         plt.legend()
         plt.grid(True)
@@ -179,9 +186,10 @@ def plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_ba
 # Main function to run the simulation and plotting
 def main():
     A, B_v, C, mu_0, sigma_0, k_bar = initialize_matrices()
-    x_data, y_data, v_list, w_list = generate_data(A, B_v, C, mu_0, sigma_0, k_bar)
-    x0_est, u_est, t_est, Aux1, Aux2 = solve_optimization(A, B_v, C, mu_0, k_bar, y_data)
-    plot_figures(x_data, y_data, v_list, w_list, Aux1, Aux2, x0_est, u_est, k_bar)
+    x_data, y_data, v_data, w_data = generate_data(A, B_v, C, mu_0, sigma_0, k_bar)
+    u_est, xhat = solve_optimization(A, B_v, C, mu_0, k_bar, y_data)
+    plot_figures(x_data, y_data, v_data, w_data, u_est, xhat, k_bar)
 
 if __name__ == '__main__':
     main()
+

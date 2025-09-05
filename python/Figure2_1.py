@@ -9,7 +9,6 @@ sys.path.append("./")
 import config
 
 def figure2_1a():
-    """Generates Figure 2.1(a)"""
     figsize = config.global_config(type=1)
     x = np.linspace(0, 10, 1000)
     
@@ -34,7 +33,6 @@ def figure2_1a():
     plt.show()
 
 def figure2_1b():
-    """Generates Figure 2.1(b)"""
     figsize = config.global_config(type=1)
     x = np.linspace(-10, 10, 1000)
 

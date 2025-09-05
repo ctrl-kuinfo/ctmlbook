@@ -1,24 +1,24 @@
 # Author: Kenji Kashima
 # Date  : 2025/06/26
 # Note  : You should install scipy first.
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from matplotlib.ticker import MultipleLocator
-
-np.random.seed(13)
 import sys
 sys.path.append("./")
 import config
 
+np.random.seed(13)
 
-# P(i,j) = Prob(state=i to state=j)
+
+# P(i,j) = Prob(current state = j → next state = i)
 P = np.array([[1/3,    1/3,      0,      0],
                 [0  ,    1/3,    1/3,      0],
                 [0  ,    1/3,    1/3,    1/3],
                 [2/3,      0,    1/3,    2/3]])
-m,n =P.shape
-
+m,n = P.shape
 
 
 def figure10_2b(N_k= 300):
@@ -40,25 +40,26 @@ def figure10_2b(N_k= 300):
     # print("p_100=",p_stable)
     
     # accumulated transition probability
-    # P_accum(i,j) = Prob(state=i to state <= j)
+    # P_accum(i,j) = Prob(current state = j → next state <= i)
     P_accum = np.zeros((m,n))
     P_accum[0,:] = P[0,:]
     for i in range(1,m):
         P_accum[i,:]= P_accum[i-1,:]+P[i,:]
 
-    p_list = np.zeros(N_k) 
-    p_list[0] = 4 # start at 4
+    state_list = np.zeros(N_k, dtype=np.int64) 
+    state_list[0] = 4 # start at 4
 
-    for i in range(1,N_k):
-        u = np.random.rand()                # uniform distribution on [0,1]
-        T = P_accum[:,int(p_list[i-1])-1]   # T(j) = Prob( state=i to state <= j )
-        for j in range(m):
-            if u <= T[j]:
-                p_list[i] = j+1
+    # simulation of autonomous Markov Chain
+    for k in range(1,N_k):
+        u = np.random.rand()                    # uniform distribution on [0,1]
+        T = P_accum[:,int(state_list[k-1])-1]   # T(i) = Prob( next state <= i )
+        for i in range(m):
+            if u <= T[i]:
+                state_list[k] = i+1
                 break
 
     plt.figure(figsize=figsize)
-    plt.stairs(p_list,linewidth=2,zorder = 10,baseline=4)
+    plt.stairs(state_list,linewidth=2,zorder = 10,baseline=4)
     plt.ylim([0.8,4.2])
     plt.xlim([0,N_k])
     plt.xticks(np.arange(0,N_k+1,10))
@@ -71,21 +72,20 @@ def figure10_2b(N_k= 300):
 
 
 def L_KL(v, beta, cost, P):
-    """ L_KL(v) % find the solution of equation (10.21)"""
+    """ L_KL(v) % find the solution of equation (10.20)"""
     return np.sum((v - cost + np.log(P.T @ np.exp(- beta*v)))**2)
          
 def L_IRL(v, beta, a, b, P):
-    """ L_IRL(v)  % find the solution of equation below (10.32)"""
+    """ L_IRL(v)  % find the solution of equation below (10.29)"""
     return beta * a @ v + b @ np.log(P.T @ np.exp(-beta * v))
 
 def figure10_4(N_k= 1000, sigma = 1.0):
     
-    # accumulated transition probability
-    # P_accum(i,j) = Prob(state=i to state <= j)
     beta = 0.8
     invbeta = 1/beta
     cost = np.array([1, 2, 3, 4]) * sigma
 
+    # find optimal transition probability P^pi
     results = minimize( fun = L_KL,
                         x0 = np.ones(4)*5,
                         args = (beta, cost, P),
@@ -121,53 +121,49 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     #     p_stable =  P_opt@p_stable
     # print("p^star_100=",p_stable)
 
-    # accumulated transition probability
-    # P_accum(i,j) = Prob(state=i to state <= j)
     P_accum = np.zeros((m,n))
     P_accum[0,:] = P_opt[0,:]
     for i in range(1,m):
         P_accum[i,:] = P_accum[i-1,:] + P_opt[i,:]
 
-    p_list = np.zeros(N_k+1,dtype=np.int8) 
-    p_list[0] = 4 
-    # start at 4
-    a, b=np.array([0,0,0,1]), np.array([0,0,0,0])
-    inv_l = np.zeros(n)
-    inv_l_hist =np.zeros((4,N_k))
-
+    state_list = np.zeros(N_k+1,dtype=np.int8) 
+    state_list[0] = 4   # start at 4
+    a, b=np.array([0,0,0,1]), np.array([0,0,0,0])   # state visitation counts
+    inv_l = np.zeros(n) # estimated state cost
+    inv_l_hist =np.zeros((4,N_k))   # history of estimated state costs
 
     # Solve L_IRL = 0 with V[1] = 'offset'
     offset = 0
 
-    for i in range(N_k):
+    for k in range(N_k):
         results = minimize(fun=L_IRL,x0= np.array([3,4,10,10]), args=(beta,a,b,P),
                         constraints= {'type': 'eq', 'fun': lambda x: x[0]-offset} )
-        results_v = results.x
-        inv_z_opt = np.exp( -beta*results_v )  
-        inv_l = -np.log(inv_z_opt ** invbeta / (P.T @ inv_z_opt))
+        results_v = results.x   # estimated V*
+        inv_z_opt = np.exp( -beta*results_v )   # estimated Z* by eq. (10.21)  
+        inv_l = results_v + np.log(P.T @ inv_z_opt)   # estimated l eq. (10.25)
+        inv_l_hist[:,k] = inv_l # store history of estimated state costs
 
-        inv_l_hist[:,i] = inv_l
-
-        u = np.random.rand()                # uniform distribution on [0,1]
-        T = P_accum[:,int(p_list[i])-1]     # T(j) = Prob( state=i to state <= j )
-        for j in range(m):
-            if u <= T[j]:
-                p_list[i+1] = j+1
+        # simulation of optimally controlled Markov Chain
+        u = np.random.rand()                
+        T = P_accum[:,int(state_list[k])-1]     
+        for i in range(m):
+            if u <= T[i]:
+                state_list[k+1] = i+1
                 break
-        #record how many times of the state has been visited
-        a[p_list[i+1]-1] +=1 
-        b[p_list[i]-1] +=1
+        # state visitation counts
+        a[state_list[k+1]-1] +=1 
+        b[state_list[k]-1] +=1
 
     figsize = config.global_config(type=1)
     plt.figure(figsize=figsize)
-    plt.stairs(p_list,linewidth=2,zorder = 10,baseline=4)
+    plt.stairs(state_list,linewidth=2,zorder = 10,baseline=4)
     plt.ylim([0.8,4.2])
     plt.xlim([0,50])
-    plt.xticks(np.arange(0,51,50))
+    plt.xticks(np.arange(0,50+1,10))
     
     plt.xlabel(r"$k$")
     plt.gca().yaxis.set_major_locator(MultipleLocator(1))
-    plt.grid()
+    plt.grid(axis='y')
     plt.tight_layout()
     plt.savefig("./figures/Figure10_4a.pdf")
 

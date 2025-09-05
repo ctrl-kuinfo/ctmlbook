@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 from cvxpy import Minimize,Variable,Problem
 from cvxpy.atoms import quad_form,norm
 from matplotlib.ticker import MultipleLocator
-
-np.random.seed(1)
 import sys
 sys.path.append("./")
 import config
+
+np.random.seed(1)
 
 def phi(x:float)->np.ndarray:
     '''
@@ -26,7 +26,6 @@ n_f = phi(0).size
 def f_true(x:float)->float:
     '''
         x - input
-
     '''
     return 2*np.sin(5*x)
 
