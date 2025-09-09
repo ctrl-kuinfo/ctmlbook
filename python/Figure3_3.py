@@ -18,12 +18,12 @@ def figure3_3a(k_bar:int=50,n_sample:int=20,a:float=0.5):
     config.global_config()
     
 
-    x= np.zeros([n_sample,k_bar+1])
+    x = np.zeros([n_sample,k_bar+1])
     x[:,0] = np.random.randn(n_sample).T
 
     step = np.random.randn(n_sample).T
-    for t in range(k_bar):
-        x[:,t+1] =  a*x[:,t] + step
+    for k in range(k_bar):
+        x[:,k+1] =  a*x[:,k] + step
     
     plt.figure(figsize=(8,7))
     for x_sample in x:
@@ -47,12 +47,12 @@ def figure3_3b(k_bar:int=50,n_sample:int=20,a:float=0.5):
     '''
     figsize = config.global_config(type=1)
 
-    x= np.zeros([n_sample,k_bar+1])
+    x = np.zeros([n_sample,k_bar+1])
     x[:,0] = np.random.randn(n_sample).T
 
-    for t in range(k_bar):
+    for k in range(k_bar):
         noise = np.random.randn(n_sample).T
-        x[:,t+1] =  a*x[:,t] + noise*np.sqrt(3)
+        x[:,k+1] =  a*x[:,k] + noise*np.sqrt(3)
     
     plt.figure(figsize=figsize)
     for x_sample in x:

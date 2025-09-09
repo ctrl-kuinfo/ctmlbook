@@ -5,8 +5,8 @@ clear;close all; rng(1); % random seed
 
 % phi is the base function
 phi = @(x) [1 ; x ; x^2 ; x^3 ; x^4 ; x^5 ; x^6 ; x^7 ; x^8 ; x^9 ];
-% phi_real is the function we want to learn
-phi_real = @(x) 2*sin(5*x); 
+% f_true is the function we want to learn
+f_true = @(x) 2*sin(5*x); 
 
 
 n_x = 100;
@@ -30,7 +30,7 @@ set(gca, 'FontName','Times','FontSize',18 );
 
 sigma_sq = [0.25,100,10^(-6)]; % hyper parameters
 n_data = 20;                % the amount of data
-[mu,Sigma,x_s,y_s] = learn_theta(phi,phi_real,sigma_sq,n_data);
+[mu,Sigma,x_s,y_s] = learn_theta(phi,f_true,sigma_sq,n_data);
 
 figure('Name','Figure 7.1(b)'); hold on; grid on;
 for i = 1:n_sample

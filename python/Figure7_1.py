@@ -15,8 +15,7 @@ def phi(x:float)->np.ndarray:
     return  np.array([1, x, x**2, x**3, x**4, 
                       x**5, x**6, x**7, x**8, x**9 ])
 
-n_f = phi(0).size
-
+n_f = phi(0).size   # number of features
 
 
 def f_true(x:float)->float:
@@ -53,7 +52,7 @@ def figure7_1a(n_x:int = 100, n_sample:int=20):
     plt.savefig("./Figure7_1a.pdf")
     plt.show()
 
-# learning from n_data in one sample trajectory with hyperparameter sigma_sq
+# learning from observation at n_data points with hyperparameter sigma_sq
 def learn_theta(sigma_sq,n_data):
     '''
         sigma_sq - simulation for several weights (=standard deviation)^2
@@ -61,7 +60,7 @@ def learn_theta(sigma_sq,n_data):
     '''
     x = np.linspace(0,1,n_data)
     X = np.zeros([n_f,n_data])
-    y=np.zeros(n_data)
+    y = np.zeros(n_data)
     for s in range(n_data):
         X[:,s] = phi(x[s])
         y[s] = f_true(x[s]) + np.random.randn()

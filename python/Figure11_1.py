@@ -1,5 +1,6 @@
 # Author: Kenji Kashima
 # Date  : 2025/09/01
+# Note  : pip install cvxpy
 
 import cvxpy as cp
 import numpy as np

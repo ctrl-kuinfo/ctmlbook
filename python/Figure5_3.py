@@ -72,15 +72,15 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=1e-4, 
 
     Returns
     -------
-    x_true : true state trajectories (nx x (k_bar+1))
-    x_hat  : state estimates        (nx x (k_bar+1))
+    x_true : true state trajectories (x_dim x (k_bar+1))
+    x_hat  : state estimates        (x_dim x (k_bar+1))
     u      : control inputs         (k_bar,)
     y      : measurements           (k_bar,)
-    Sigmas : covariance matrices    (nx x nx x (k_bar+1))
-    x_check: corrected state estimates        (nx x (k_bar))
-    Sigmac : corrected covariance matrices    (nx x nx x (k_bar))
+    Sigmas : one-step prediction covariance matrices    (x_dim x x_dim x (k_bar+1))
+    x_check: corrected state estimates        (x_dim x (k_bar))
+    Sigmac : corrected covariance matrices    (x_dim x x_dim x (k_bar))
     """
-    nx = A.shape[0]
+    x_dim = A.shape[0]
 
     # Generate noise sequences if not provided
     if v is None:
@@ -89,11 +89,11 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=1e-4, 
         w = np.sqrt(Rw) * np.random.randn(k_bar)  # observation noise w_k ~ N(0, Rw)
 
     # Allocate containers
-    x_true  = np.zeros((nx, k_bar + 1))
-    x_hat   = np.zeros((nx, k_bar + 1))
-    Sigmas  = np.zeros((nx, nx, k_bar + 1))
-    x_check = np.zeros((nx, k_bar))
-    Sigmac  = np.zeros((nx, nx, k_bar))
+    x_true  = np.zeros((x_dim, k_bar + 1))
+    x_hat   = np.zeros((x_dim, k_bar + 1))
+    Sigmas  = np.zeros((x_dim, x_dim, k_bar + 1))
+    x_check = np.zeros((x_dim, k_bar))
+    Sigmac  = np.zeros((x_dim, x_dim, k_bar))
     u       = np.zeros(k_bar)
     y       = np.zeros(k_bar)
 
@@ -133,11 +133,11 @@ def simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K, k_bar, x0, mode, Rw=1e-4, 
                 u[k] = (-K[k] @ x_check[:, k]).item()
 
             # 5) Time update (prior for next step)
-            x_hat[:, k+1] = (A @ x_check[:,k].reshape(nx,1) + B_u * u[k]).flatten()
+            x_hat[:, k+1] = (A @ x_check[:,k].reshape(x_dim,1) + B_u * u[k]).flatten()
             Sigma = A @ Sigma_check @ A.T + Rv * (B_v @ B_v.T)
 
         # 6) Propagate true system
-        x_true[:, k+1] = (A @ x_true[:, k].reshape(nx,1) + B_u * u[k] + B_v * v[k]).flatten()
+        x_true[:, k+1] = (A @ x_true[:, k].reshape(x_dim,1) + B_u * u[k] + B_v * v[k]).flatten()
         Sigmas[:, :, k+1] = Sigma
         
     return x_true, x_hat, u, y, Sigmas, x_check, Sigmac
@@ -267,7 +267,7 @@ A = np.block([
 B_u = np.vstack([B_r, np.zeros((nw,1)) ])  # Control input matrix
 B_v = np.vstack([np.zeros((nr,1)), Bw])    # Disturbance input matrix (noise)
 C = np.block([ C_r, np.zeros((1,nw)) ])    # Output matrix
-nx = A.shape[0]
+x_dim = A.shape[0]
 
 # --- 3. LQR and Noise Parameter Definition ---
 # LQR parameters
@@ -287,8 +287,8 @@ process_noise = np.sqrt(Rv) * np.random.randn(k_bar)
 obs_noise = np.sqrt(Rw) * np.random.randn(k_bar)
 
 # Initial state
-mu = np.zeros(nx)    # initial mean
-Sigma = np.eye(nx)   # initial covariance
+mu = np.zeros(x_dim)    # initial mean
+Sigma = np.eye(x_dim)   # initial covariance
 x0 = np.random.multivariate_normal( mu, Sigma )*0.1   # Initial state x0 ~ N(mu, Sigma)
 
 # --- 5. LQR Gain Calculation ---
@@ -311,7 +311,7 @@ x_true_k, x_hat_LQG_k, u_k, y_k, Sigmas_k, x_check_k, Sigmac_k = simulate_lq_con
 x_LQRm, _, u_LQRm, _, _, _, _  = simulate_lq_control(A_r, B_r, B_r, C_r, mu[0:2], Sigma[0:2,0:2], K_lqr, k_bar, x0[0:2], mode='lqr', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
 
 # LQR optimal (colored noise)
-K_lqr_aug = [np.pad(Ki, ((0,0),(0, nx - Ki.shape[1])), mode='constant') for Ki in K_lqr]    # Pad K to match dimensions
+K_lqr_aug = [np.pad(Ki, ((0,0),(0, x_dim - Ki.shape[1])), mode='constant') for Ki in K_lqr]    # Pad K to match dimensions
 x_LQRmm, _, u_LQRmm, _, _, _, _  = simulate_lq_control(A, B_u, B_v, C, mu, Sigma, K_lqr_aug, k_bar, x0, mode='lqr', Rw=Rw, Rv=Rv, v = process_noise, w = obs_noise)
 
 

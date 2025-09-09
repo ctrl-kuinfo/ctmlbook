@@ -19,7 +19,7 @@ def phi(x:float)->np.ndarray:
     return  np.array([1, x, x**2, x**3, x**4, 
                       x**5, x**6, x**7, x**8, x**9])
 
-n_f = phi(0).size
+n_f = phi(0).size   # number of features
 
 def f_true(x:float)->float:
     '''
@@ -30,7 +30,6 @@ def f_true(x:float)->float:
 def figure7_4(n_data:int=30, n_x:int=100):
     '''
         n_x - number of x-grid for plot
-
         n_sample - number of data
     '''
     figsize = config.global_config(type= 1)

@@ -41,13 +41,14 @@ def figure3_4a(Aw, Bw, Cw):
     plt.show()
 
 def figure3_4b( Aw, Bw, Cw, k_bar ):
+    x_bar_dim = Aw.shape[0]
     v = np.random.randn(k_bar+1) # white noise
-    bar_x = np.zeros((nw, k_bar + 1)) # state of weighting filter
+    x_bar = np.zeros((x_bar_dim, k_bar + 1)) # state of weighting filter
     y = np.zeros(k_bar + 1) # colored noise
     
     for k in range(k_bar):
-        bar_x[:, k+1] = Aw @ bar_x[:, k] + Bw.ravel() * v[k]
-        y[k+1] = (Cw @ bar_x[:, k+1])[0]
+        x_bar[:, k+1] = Aw @ x_bar[:, k] + Bw.ravel() * v[k]
+        y[k+1] = (Cw @ x_bar[:, k+1])[0]
 
     figsize = config.global_config(type=1)
     plt.figure(figsize=figsize)
@@ -65,7 +66,7 @@ def figure3_4b( Aw, Bw, Cw, k_bar ):
 # Parameters for noise model
 Ts = 0.1
 Aw, Bw, Cw = create_noise_model(Ts)
-nw = Aw.shape[0]
+# nw = Aw.shape[0]
 
 if __name__ == '__main__':
     figure3_4a(Aw, Bw, Cw)
