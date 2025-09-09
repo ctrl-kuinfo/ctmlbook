@@ -17,18 +17,19 @@ n_k_a    = 9;               % number of time steps for Figure 3.1(a)
 n_k_b    = 50;              % total steps for Figure 3.1(b)
 n_sample = 10;              % number of sample trajectories
 
-%% Build transition matrix P
+% Build transition probability matrix P (approximate uniform noise over interval)
 P = zeros(n_x, n_x);
 for i = 1:n_x
     xi    = x(i);
-    fb    = xi + 0.1*(xi - xi^3);
-    noise = 0.5*(1 - abs(xi));
+    fb    = xi + 0.1*(xi - xi^3);          % fb(x)
+    noise = 0.5*(1 - abs(xi));             % c(x)
     upper = fb + noise;
     lower = fb - noise;
-    idx_u = ceil((upper + 1)*n_tmp) + 1;
-    idx_l = floor((lower + 1)*n_tmp) + 1;
-    % match Python: j = idx_l : idx_u-1
-    for j = idx_l:(idx_u-1)
+    % Python: idx_u = int(floor(upper*n_tmp + 0.5)) + n_tmp
+    idx_u = floor(upper * n_tmp + 0.5) + n_tmp + 1;
+    % Python: idx_l = int(ceil(lower*n_tmp - 0.5)) + n_tmp
+    idx_l = ceil(lower * n_tmp - 0.5) + n_tmp + 1;
+    for j = idx_l:(idx_u)
         P(j,i) = P(j,i) + 1.0 / (idx_u - idx_l + 1);
     end
 end

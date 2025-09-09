@@ -37,7 +37,7 @@ def RL4LQR(sigma, iter_Gain, k_update, Npath):
     B = np.array([[1], [0], [0]])  # B-matrix
 
     x_dim, u_dim = B.shape  # state & input dimension
-    p_dim = (x_dim + u_dim) * (x_dim + u_dim + 1) // 2  # size of p (integer)
+    p_dim = (x_dim + u_dim) * (x_dim + u_dim + 1) // 2  + 1 # size of p (integer)
 
     Q = np.eye(x_dim)  # cost x'Qx
     R = np.eye(u_dim)  # cost u'Ru
@@ -109,17 +109,20 @@ def RL4LQR(sigma, iter_Gain, k_update, Npath):
 
 # Function to compute feature vector phi from x and u; eq.(9.35)
 def phi(x, u):
-    H = np.vstack([x, u])@ np.vstack([x, u]).T
-    phi_vector = np.hstack([H[i, i:] for i in range(H.shape[0])])
-    return phi_vector.reshape(-1,1)
+    xu = np.vstack([x, u])              # (n,1)
+    H  = xu @ xu.T                      # (n,n)
+    phi_vector = np.hstack([H[i, i:] for i in range(H.shape[0])]).reshape(-1, 1)
+    return np.concatenate([phi_vector, [[1.0]]])
 
 # Function to convert p vector to Upsilon matrix; eq.(9.35)
 def p_to_Ups(p, n):
-    p = p.reshape(1,-1)
+    p = np.asarray(p).reshape(-1)  # 1D
+    p = p[:n*(n+1)//2]                      # drop trailing bias
+
     H = np.zeros((n, n))
     idx = 0
     for i in range(n):
-        H[i, i:] = p[:,idx:idx + n - i]
+        H[i, i:] = p[idx:idx + n - i]
         idx += n - i
     return (H + H.T) / 2
 

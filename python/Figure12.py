@@ -1,11 +1,11 @@
 # Author: Kenji Kashima
-# Date  : 2025/05/25
+# Date  : 2025/09/01
 
 import numpy as np
 import matplotlib.pyplot as plt
 import config
 
-np.random.seed(13)
+seed = 13
 
 def gaussian_kernel(x,y,c):
     """
@@ -13,17 +13,15 @@ def gaussian_kernel(x,y,c):
 
     Parameters:
         x : ndarray
-            Input array (e.g., column vector of sample points).
         y : ndarray
-            Input array to compare with x (will be transposed inside).
-        c : float
-            Kernel width (scale parameter).
+        c : float, Kernel width (scale parameter).
 
-    Returns:
-        ndarray
+    Returns : ndarray
             Kernel matrix K where K[i,j] = exp( - (x_i - y_j)^2 / c^2 )
     """
-    return np.exp(-(x-y.T)**2/c**2)
+    x = np.asarray(x).reshape(-1, 1)   # (N,1)
+    y = np.asarray(y).reshape(-1, 1)   # (M,1)
+    return np.exp(-((x - y.T)**2) / (c**2))
 
 def min_kernel(x,y):
     """
@@ -31,29 +29,23 @@ def min_kernel(x,y):
 
     Parameters:
         x : ndarray
-            Input array (1D, will be flattened).
         y : ndarray
-            Input array (1D, will be flattened).
     
-    Returns:
-        ndarray
+    Returns : ndarray
             Kernel matrix K where K[i,j] = min(x_i, y_j).
     """
-    x = np.ravel(x)
-    y = np.ravel(y)
-    return np.minimum.outer(y, x)
+    x = np.asarray(x).reshape(-1, 1)  
+    y = np.asarray(y).reshape(-1, 1)  
+    return np.minimum(x, y.T)         
 
-def figure12_2(N_x= 100, c = 0.1,label="a"):
+def figure12_2(N_x= 100, c = 0.1, label="a"):
     '''  
-        Figure12.2(a) c=0.1 
-        Figure12.2(b) c=1.0
+        Figure12.2(a) c = 0.1 
+        Figure12.2(b) c = 1.0
     '''
     figsize = config.global_config(type= 1)
-    x = np.linspace(0,1,N_x).reshape(-1,1) # x for plot 
-    # gaussian kernel function
+    x = np.linspace(0, 1, N_x)                              # x for plot (query)          
     K = gaussian_kernel(x,x,c)     
-
-    x = x.flatten()
 
     # prior distribution
     prior_mean = x # y=mu(x)=x
@@ -75,22 +67,28 @@ def figure12_2(N_x= 100, c = 0.1,label="a"):
     plt.savefig("./Figure12_2{}.pdf".format(label))
     plt.show()
 
-def figure12_3(N_x= 100, s_bar = 10, c = 0.1, label="a"):
+def figure12_3and4(N_x= 100, s_bar = 10, c = 0.1, label="a", kernel="Gaussian"):
     '''  
-        Figure12.3(a) s_bar=10 
-        Figure12.3(b) s_bar=50
+        Figure12.x(a) s_bar=10 
+        Figure12.x(b) s_bar=50
     '''
+    np.random.seed(seed)
     figsize = config.global_config(type= 1)
-    x = np.expand_dims(np.linspace(0,1,N_x),axis=0)
-    x_sample = np.random.rand(s_bar) * np.random.rand(s_bar); # x data points
-    x_sample = np.expand_dims(x_sample,axis=0)
-    
-    # gaussian kernel function
-    K = gaussian_kernel(x_sample, x_sample, c)  # eq 12.8
-    kx = gaussian_kernel(x_sample, x, c)    # eq 12.9
-
-    x = x.flatten()
-    x_sample = x_sample.flatten()
+    x_data = np.random.rand(s_bar) * np.random.rand(s_bar)  # x data points
+    x = np.linspace(0, 1, N_x)                              # x for plot (query)          
+        
+    # kernel function selection
+    if kernel == "Gaussian":
+        K = gaussian_kernel(x_data, x_data, c)  # eq 12.8
+        Ktmp = gaussian_kernel(x, x, c)
+        kx = gaussian_kernel(x,x_data, c)
+        title = '3'+label    # eq 12.9
+    else:
+        K = min_kernel(x_data, x_data)  # eq 12.8
+        Ktmp = min_kernel(x, x)
+        kx = min_kernel(x,x_data)    # eq 12.9
+        title = '4'+label
+    # K = (K + K.T)/2  # to avoid numerical asymmetry
 
     # function in example 12.1.9 and Fig 12.4
     mu_x = lambda x : x                     # mu(x)=x
@@ -100,18 +98,18 @@ def figure12_3(N_x= 100, s_bar = 10, c = 0.1, label="a"):
 
     sigma = 0.1
     e_s = sigma * np.random.randn(s_bar)    # noise sample
-    y_sample = fn_x(x_sample) + e_s         # observation data 
+    y_data = fn_x(x_data) + e_s         # observation data 
 
     plt.figure(figsize=figsize)
     plt.plot(x,mu_x(x),color = 'red' ,label=r"$\mu({\rm x})$") 
     plt.plot(x,fn_list,'k--',label=r'$\sin(4\pi {\rm x})$');  
 
     #plot samples
-    plt.scatter(x_sample,y_sample,edgecolor='b',marker='o',facecolor='none', label=r"${\rm y}_s$")
+    plt.scatter(x_data,y_data,edgecolor='b',marker='o',facecolor='none', label=r"${\rm y}_s$")
 
-    prior_mean = mu_x(x_sample)
-    mean = mu_x(x)+kx @ np.linalg.inv(K + sigma**2 * np.eye(s_bar)) @ (y_sample-prior_mean) # eq 12.16
-    Kpost = gaussian_kernel(x, x, c) - kx @ np.linalg.inv(K + sigma**2 * np.eye(s_bar)) @ kx.T  # eq 12.17
+    prior_mean = mu_x(x_data)
+    mean = mu_x(x)+kx @ np.linalg.solve(K + sigma**2 * np.eye(s_bar) , y_data-prior_mean ) # eq 12.16
+    Kpost = Ktmp - kx @ np.linalg.solve(K + sigma**2 * np.eye(s_bar) , kx.T )  # eq 12.17
     x_SD = np.sqrt(np.diag(Kpost))  # posterior standard deviation
 
     plt.fill_between(x,mean-x_SD,mean+x_SD,color="blue",alpha=0.25)
@@ -124,80 +122,14 @@ def figure12_3(N_x= 100, s_bar = 10, c = 0.1, label="a"):
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
-    plt.savefig("./Figure12_3{}.pdf".format(label))
+    plt.savefig("./Figure12_{}.pdf".format(title))
     plt.show()
-    return (x_sample,y_sample)
 
-
-def figure12_4(N_x= 100, s_bar = 10, label="a", sample0=None):
-    '''  
-        Figure12.4(a) s_bar=10 
-        Figure12.4(b) s_bar=50
-    '''
-    figsize = config.global_config(type= 1)
-    x=np.expand_dims(np.linspace(0,1,N_x),axis=0)
-
-    # prior distribution
-    mu_x = lambda x : x                      # mu(x)=x
-    fn_x = lambda x : np.sin(4*np.pi*x)      # y(x) = sin(4πx)
-    sigma = 0.1
-    if sample0 is not None:
-        x_sample,y_sample = sample0
-        x_sample = np.expand_dims(x_sample,axis=0)
-    else:
-        x_sample= np.random.rand(s_bar) * np.random.rand(s_bar); # x data points
-        x_sample = np.expand_dims(x_sample,axis=0)
-
-        e_s = sigma * np.random.randn(s_bar)
-        y_sample = fn_x(x_sample) + e_s
-    
-    # gaussian kernel function
-    K = min_kernel(x_sample, x_sample) 
-    kx = min_kernel(x_sample, x)
-
-    x = x.flatten()
-    x_sample = x_sample.flatten()
-       
-    fn_list = fn_x(x)
-    plt.figure(figsize=figsize)
-    plt.plot(x,mu_x(x),color = 'red' ,label=r"$\mu({\rm x})$") 
-    plt.plot(x,fn_list,'k--',label=r'$\sin(4\pi {\rm x})$');  
-
-    #plot samples
-    plt.scatter(x_sample,y_sample,edgecolor='b',marker='o',facecolor='none', label=r"${\rm y}_s$")
-
-    prior_mean = mu_x(x_sample)
-    mean = mu_x(x) + kx @ np.linalg.inv(K + sigma**2 * np.eye(s_bar)) @ (y_sample-prior_mean) # eq 12.16
-    Kpost = min_kernel(x, x) - kx @ np.linalg.inv(K + sigma**2 * np.eye(s_bar)) @ kx.T  # eq 12.17
-    x_SD = np.sqrt(np.diag(Kpost))  # 
-
-    plt.fill_between(x,mean-x_SD,mean+x_SD,color="blue",alpha=0.25)
-    plt.plot(x,mean,"-.", color="blue",   label = r"$\mu ({\rm x}|\mathcal D)$")
-    plt.xlim([0,1])
-    plt.ylim([-1.5,3.0])
-    plt.yticks([-1,0,1,2,3])
-    plt.xlabel(r"${\rm x}$")
-    plt.legend(loc='upper left')
-    plt.grid()
-    plt.tight_layout()
-    plt.savefig("./Figure12_4{}.pdf".format(label))
-    plt.show()
 
 if __name__ == '__main__':
-    figure12_2(N_x=100, c = 0.1, label="a") #Figure12.2(a)
-    figure12_2(N_x=100, c = 1.0, label="b") #Figure12.2(b)
-    sample10 = figure12_3(N_x=100, s_bar = 10, label="a") #Figure12.3(a)
-    sample50 = figure12_3(N_x=100, s_bar = 50, label="b") #Figure12.3(b)
-    figure12_4(N_x=100, s_bar = 10, label="a", sample0 = sample10) #Figure12.4(a)
-    figure12_4(N_x=100, s_bar = 50, label="b", sample0 = sample50) #Figure12.4(b)
-
-
-
-
-
-
-
-
-
-
-
+    figure12_2(N_x=100, c = 0.1, label="a")                             #Figure12.2(a)
+    figure12_2(N_x=100, c = 1.0, label="b")                             #Figure12.2(b)
+    figure12_3and4(N_x=100, s_bar = 10, label="a", kernel="Gaussian")   #Figure12.3(a)
+    figure12_3and4(N_x=100, s_bar = 50, label="b", kernel="Gaussian")   #Figure12.3(b)
+    figure12_3and4(N_x=100, s_bar = 10, label="a", kernel="min")        #Figure12.4(a)
+    figure12_3and4(N_x=100, s_bar = 50, label="b", kernel="min")        #Figure12.4(b)

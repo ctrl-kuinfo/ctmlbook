@@ -1,5 +1,5 @@
 % Author: Kenji Kashima
-% Date  : 2025/04/01
+% Date  : 2025/09/01
 
 clear;close all; rng(1); % random seed
 
@@ -76,8 +76,15 @@ f = [-mu_0; zeros(k_bar, 1); ones(n_l1, 1)];
 % Linear inequality constraints
 
 % Auxiliary matrices for optimization
-Aux1 = get_Aux1(A, C, n_l1);
-Aux2 = get_Aux2(A, C, n_l1, B_v);
+Aux1 = zeros(k_bar+1, size(A,1));        % (k_bar+1) × n
+Aux2 = zeros(k_bar+1, k_bar);            % (k_bar+1) × k_bar
+
+for i = 0:k_bar
+    Aux1(i+1, :) = C * (A^i);
+    for j = 0:i-1
+        Aux2(i+1, j+1) = C * (A^(i-1-j)) * B_v;
+    end
+end
 
 % transform L1 norm to linear inequality constraints
 % x_k = A^k * x0 + A^(k-1)*u_0 + A^(k-2)*u_1 ...
@@ -100,32 +107,36 @@ b_total = [bineq; b_l1];
 options = optimoptions('quadprog','Display','off');
 [x_sol, fval] = quadprog(Q, f, A_total, b_total, [], [], [], [], [], options);
 
-% Extract solution
-x0_est = x_sol(1:n);   % Estimated x0
-u_est = x_sol(n+1:n+k_bar); % Estimated control inputs
-t_est = x_sol(n+k_bar+1:end);  % Estimated L1 norm variables
+% 解ベクトルを分解
+x0_est = x_sol(1:n);                     % 推定された初期状態
+u_est  = x_sol(n+1:n+k_bar);             % 推定された入力系列
+
+% 状態推定の復元
+xhat = zeros(n, k_bar+1);
+xhat(:,1) = x0_est;
+for k = 1:k_bar
+    xhat(:,k+1) = A * xhat(:,k) + B_v * u_est(k);
+end
 
 % Plot results
-figure;
+figure('Name', 'Figure5.4(a)');
 plot(0:k_bar, x_data(1,:), 'LineWidth', 1.5);
 hold on;
 plot(0:k_bar, y_data, 'g--', 'LineWidth', 1.5);
-plot(0:k_bar, Aux1*x0_est + Aux2*u_est, 'r-.', 'LineWidth', 1.5);
+plot(0:k_bar, xhat(1,:), 'r-.', 'LineWidth', 1.5);
 xlabel('Time step $k$');
 legend('True state $(x_k)_1$', 'Measurements $y$', 'Estimated ${(\hat{x}_k)}_1$');
 grid on;
 
-figure;
+figure('Name', 'Figure5.4(b)');
 plot(0:k_bar, x_data(3,:), 'LineWidth', 1.5);
 hold on;
-Aux3 = get_Aux1(A, [0,0,1], n_l1);
-Aux4 = get_Aux2(A, [0,0,1], n_l1, B_v);
-plot(0:k_bar, Aux3*x0_est + Aux4*u_est, 'r-.', 'LineWidth', 1.5);
+plot(0:k_bar, xhat(3, :), 'r-.', 'LineWidth', 1.5);
 xlabel('Time step $k$');
 legend('True state $(x_k)_3$', 'Estimated ${(\hat{x}_k)}_3$');
 grid on;
 
-figure;
+figure('Name', 'Figure5.4(c)');
 stairs(0:k_bar-1, v_list', 'LineWidth', 1.5);
 hold on;
 stairs(0:k_bar-1, u_est, 'r-.', 'LineWidth', 1.5);
@@ -133,37 +144,10 @@ xlabel('Time step $k$');
 legend('Distrubance $v_k$', 'Estimation $\hat{v}_k:=u_k$');
 grid on;
 
-figure;
+figure('Name', 'Figure5.4(d)');
 stairs(0:k_bar, w_list', 'LineWidth', 1.5);
 hold on;
-stairs(0:k_bar, y_data'-Aux1*x0_est - Aux2*u_est, 'r-.', 'LineWidth', 1.5);
+stairs(0:k_bar, y_data'-xhat(1,:)', 'r-.', 'LineWidth', 1.5);
 xlabel('Time step $k$');
 legend('Noise $w_k$', 'Estimation $\hat{w}_k:=y-{(\hat{x}_k)}_1$');
 grid on;
-
-% Functions for auxiliary matrices
-function Aux1 = get_Aux1(A, C, n_k)
-    % \sum_{k=0}^{n_k-1}||Cx_k-y_k||_1,
-    % where x_k = A^k * x0 + A^(k-1)*u_0 + A^(k-2)*u_1 ...
-    [size_y, size_x] = size(C);
-    Aux1 = zeros(n_k*size_y, size_x);
-    for k = 1:n_k
-       Aux1((k-1)*size_y+1:k*size_y,:) = C * A^(k-1);
-    end
-    % Aux1 is for the x0 related part.
-    % e.g. n_k=3 Aux1 = [C,CA,CA^2]'  
-end
-
-function Aux2 = get_Aux2(A, C, n_k, B_v)
-    [size_y, size_x] = size(C); 
-    size_u = size(B_v, 2);
-    Aux2 = zeros(n_k*size_y, (n_k-1)*size_u);
-    for k = 1:n_k-1
-        Aux2(k*size_y+1:n_k*size_y, (k-1)*size_u+1:k*size_u) = get_Aux1(A, C, n_k-k) * B_v;
-    end
-    % Aux2 is for the u related part.
-    % e.g.         [ O    , O  ,  O ]         
-    %              [ CB   , O  ,  O ]
-    % n_k=4 Aux2 = [ CAB  , CB ,  O ]
-    %              [ CA^2B, CAB, CB ]
-end

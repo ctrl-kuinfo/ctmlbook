@@ -11,7 +11,7 @@ np.random.seed(24)
 def initialization(k_bar=1000):
     # ARX parameters
     a = [1.2, -0.47, 0.06]  # coefficient of (z-0.5)(z-0.4)(z-0.3)
-    b = [1.0, 2.0]          # u1,u0
+    b = [1.0, 2.0]          # b2, b1
 
     q0 = np.array([0,0,0,1,1]) # initial states and inputs, note that u0=u1=1
 
@@ -41,12 +41,12 @@ def sysid_module(p_star:np.ndarray, a_dim:int, q0:np.ndarray, u:np.ndarray, v:np
     q = np.zeros((k_dat,p_dim))
     q[0,:] = q0
 
-    # open loop control to genereate y data
+    # open loop simulation to genereate y data
     # the true system y_k = q_k^T * p^* + v_k
-    # where q_k = [y_k, y_{k-1}, y_{k-2}, u_k, u_{k-1}]
+    # where q_k = [y_{k-1}, y_{k-2}, y_{k-3}, u_{k-1}, u_{k-2}]
     for k in range(k_dat-1):
         y[k] =  p_star[k,:] @ q[k,:] + v[k]
-        q[k+1,:]=np.hstack([y[k],q[k,:a_dim-1],u[k+1],q[k,a_dim:p_dim-1]])
+        q[k+1,:] = np.hstack([y[k],q[k,:a_dim-1],u[k],q[k,a_dim:p_dim-1]])
 
     p_est = np.zeros((k_dat,p_dim))
     a_err = np.zeros(k_dat)

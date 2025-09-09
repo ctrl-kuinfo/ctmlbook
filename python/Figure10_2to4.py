@@ -19,7 +19,7 @@ P = np.array([[1/3,    1/3,      0,      0],
 m,n = P.shape
 
 
-def figure10_2b(N_k= 300):
+def figure10_2b(k_bar= 300):
     figsize = config.global_config(type= 1)
     # Figure 10.2 (a) transition probability
     
@@ -44,11 +44,11 @@ def figure10_2b(N_k= 300):
     for i in range(1,m):
         P_accum[i,:]= P_accum[i-1,:]+P[i,:]
 
-    state_list = np.zeros(N_k, dtype=np.int64) 
+    state_list = np.zeros(k_bar, dtype=np.int64) 
     state_list[0] = 4 # start at 4
 
     # simulation of autonomous Markov Chain
-    for k in range(1,N_k):
+    for k in range(1,k_bar):
         u = np.random.rand()                    # uniform distribution on [0,1]
         T = P_accum[:,int(state_list[k-1])-1]   # T(i) = Prob( next state <= i )
         for i in range(m):
@@ -59,8 +59,8 @@ def figure10_2b(N_k= 300):
     plt.figure(figsize=figsize)
     plt.stairs(state_list,linewidth=2,zorder = 10,baseline=4)
     plt.ylim([0.8,4.2])
-    plt.xlim([0,N_k])
-    plt.xticks(np.arange(0,N_k+1,10))
+    plt.xlim([0,k_bar])
+    plt.xticks(np.arange(0,k_bar+1,10))
     plt.xlabel(r"$k$")
     plt.gca().yaxis.set_major_locator(MultipleLocator(1))
     plt.grid(axis='y')
@@ -77,7 +77,7 @@ def L_IRL(v, beta, a, b, P):
     """ L_IRL(v)  % find the solution of equation below (10.29)"""
     return beta * a @ v + b @ np.log(P.T @ np.exp(-beta * v))
 
-def figure10_4(N_k= 1000, sigma = 1.0):
+def figure10_4(k_bar= 1000, sigma = 1.0):
     
     beta = 0.8
     invbeta = 1/beta
@@ -124,16 +124,16 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     for i in range(1,m):
         P_accum[i,:] = P_accum[i-1,:] + P_opt[i,:]
 
-    state_list = np.zeros(N_k+1,dtype=np.int8) 
+    state_list = np.zeros(k_bar+1,dtype=np.int8) 
     state_list[0] = 4   # start at 4
     a, b=np.array([0,0,0,1]), np.array([0,0,0,0])   # state visitation counts
     inv_l = np.zeros(n) # estimated state cost
-    inv_l_hist =np.zeros((4,N_k))   # history of estimated state costs
+    inv_l_hist =np.zeros((4,k_bar))   # history of estimated state costs
 
     # Solve L_IRL = 0 with V[1] = 'offset'
     offset = 0
 
-    for k in range(N_k):
+    for k in range(k_bar):
         results = minimize(fun=L_IRL,x0= np.array([3,4,10,10]), args=(beta,a,b,P),
                         constraints= {'type': 'eq', 'fun': lambda x: x[0]-offset} )
         results_v = results.x   # estimated V*
@@ -174,7 +174,7 @@ def figure10_4(N_k= 1000, sigma = 1.0):
         plt.plot(inv_l_hist[i,:],label=r"$\ell_{}$".format(i+1))
     plt.ylim([0,6.5])
     plt.yticks(np.arange(0,6,1))
-    plt.xlim([0,N_k])
+    plt.xlim([0,k_bar])
     plt.xlabel(r"$k$")
     plt.legend()
     plt.grid(axis='y')
@@ -183,5 +183,5 @@ def figure10_4(N_k= 1000, sigma = 1.0):
     plt.show()
 
 if __name__ == '__main__':
-    figure10_2b(N_k=50)
-    figure10_4(N_k=1000,sigma=1.0)
+    figure10_2b(k_bar=50)
+    figure10_4(k_bar=1000,sigma=1.0)

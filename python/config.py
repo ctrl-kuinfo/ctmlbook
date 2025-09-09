@@ -1,4 +1,4 @@
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
 def global_config(fontsize=25, type=0):
     plt.rc('text', usetex=True) # use latex

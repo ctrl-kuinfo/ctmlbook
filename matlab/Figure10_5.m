@@ -76,7 +76,7 @@ function [ini_state,state,x1_list,x2_list]=simulation(value,Tmax, deterministic)
     end
 end
 
-Figure 10.5(b)
+% Figure 10.5(b)
 [ini_state,state,x1_list,x2_list] = simulation(value,20000,false);
 figure; hold on;
 plot(ini_state(:,1),ini_state(:,2),'*','MarkerSize',10);

@@ -9,22 +9,19 @@ np.random.seed(23)
 
 directions = [(1,0), (-1,0), (0,1), (0,-1)]  # Right, Left, Up, Down
 
-def init_value( ):
-    # Define value matrix
-    value = np.zeros((grid_size + 1, grid_size + 1))
-
-    # Fill value matrix with the given equation
-    for i in range(grid_size + 1):
-        for j in range(grid_size + 1 ):
-            value[i, j] = (1.5 * np.exp(-((i-20)**2)/1000 - ((j-20)**2)/1000) +
-                        np.exp(-(i-20)**2/1000 - (j-90)**2/500) +
-                        np.exp(-(i-40)**2/1000 - (j-50)**2/500) +
-                        np.exp(-(i-70)**2/300 - (j-70)**2/500) +
-                        1.5 * np.exp(-(i-80)**2/300 - (j-40)**2/500) +
-                        np.exp(-(i-50)**2/800 - (j-50)**2/800) +
-                        1.2 * np.exp(-(i-80)**2/200 - (j-20)**2/200) +
-                        np.exp(-(i-90)**2/200 - (j-10)**2/200))
-    value /= 10
+def init_value():
+    g = grid_size  # 100
+    I, J = np.ogrid[0:g+1, 0:g+1]  # 形状: (g+1,1), (1,g+1) → ブロードキャスト
+    value = (
+        1.5*np.exp(-((I-20)**2)/1000 - ((J-20)**2)/1000) +
+        np.exp(   -((I-20)**2)/1000 - ((J-90)**2)/500 ) +
+        np.exp(   -((I-40)**2)/1000 - ((J-50)**2)/500 ) +
+        np.exp(   -((I-70)**2)/300  - ((J-70)**2)/500 ) +
+        1.5*np.exp(-((I-80)**2)/300  - ((J-40)**2)/500 ) +
+        np.exp(   -((I-50)**2)/800  - ((J-50)**2)/800 ) +
+        1.2*np.exp(-((I-80)**2)/200  - ((J-20)**2)/200 ) +
+        np.exp(   -((I-90)**2)/200  - ((J-10)**2)/200 )
+    ) / 10.0
     return value
 
 def all_agents_locally_optimal(state, value, sensor_range):
@@ -106,28 +103,31 @@ def simulation(value, ini_state, Tmax, deterministic):
     return state, x_list[:, :k+1], y_list[:, :k+1]
 
 def sum_value_near_agents(state, sensor_range, X, Y, value):
-    """
-    Returns:
-        float: Sum of value[I, J] for all grid cells (I, J) around (X, Y)
-               where at least one agent is within 'sensor_range'.
-    """
-    weighted_value = 0
-    evaluation_range = sensor_range + 3
-    X, Y = int(X), int(Y)
-    for I in range(max(1, X - evaluation_range), min(grid_size, X + evaluation_range)+1):
-        for J in range(max(1, Y - evaluation_range), min(grid_size, Y + evaluation_range)+1):
-            weighted_value += value[I, J] * is_agent_nearby(state, I, J, sensor_range)
-    return weighted_value
+    r2 = sensor_range*sensor_range
+    g = grid_size
 
-def is_agent_nearby(state, X, Y, sensor_range):
-    """
-    Returns:
-        int: 1 if at least one agent is within 'sensor_range' from (X,Y), otherwise 0.
-    """
-    dx = state[:, 0] - X
-    dy = state[:, 1] - Y
-    squared_distance = dx**2 + dy**2
-    return int(np.any(squared_distance < sensor_range**2))
+    # evaluation range
+    evaluation_range = sensor_range + 3
+    X = int(X); Y = int(Y)
+    i0 = max(0, X - evaluation_range)
+    i1 = min(g, X + evaluation_range)
+    j0 = max(0, Y - evaluation_range)
+    j1 = min(g, Y + evaluation_range)
+
+    # Sub-grid coordinates (shape: (H,1), (1,W))
+    Ii, Jj = np.ogrid[i0:i1+1, j0:j1+1]  # H×1, 1×W
+
+    # state: (IDn,2) represents (x,y) of each agent in the grid
+    ax = state[:, 0][:, None, None]
+    ay = state[:, 1][:, None, None]
+    dist2 = (ax - Ii)**2 + (ay - Jj)**2           # shape: (IDn, H, W)
+
+    # If any agent is within range (min distance) → boolean mask (H,W)
+    near_mask = (dist2.min(axis=0) < r2)
+
+    # Sum values of cells where mask is active
+    return float(value[i0:i1+1, j0:j1+1][near_mask].sum())
+
 
 
 def Figure10_5a(value):
