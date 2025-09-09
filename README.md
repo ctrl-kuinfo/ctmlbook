@@ -26,9 +26,9 @@
 書籍内の数値計算を計算機実装した簡易コードです。可視化による理解の促進を目的として定理などをベタ打ちしたもので、高速化などは考慮しておりません。
 書籍内の図は、Python版の実行結果です。
 
-- Matlab [.mファイル一式(zip)](./matlab.zip) *ver2025.4.1*
+- Matlab [.mファイル一式(zip)](./matlab/matlab.zip) *ver2025.9.9* Figure 11_1を除いて、MATLAB Onlineで実行可能
 
-- Python [.pyファイル一式(zip)](./python.zip) *ver2025.4.1*
+- Python [.pyファイル一式(zip)](./python/python.zip) *ver2025.9.9*　単独で実行可能（config.pyのみ描画設定ファイル）
 
 ### スライド
 
