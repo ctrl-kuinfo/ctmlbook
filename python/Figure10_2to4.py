@@ -1,5 +1,5 @@
 # Author: Kenji Kashima
-# Date  : 2025/06/26
+# Date  : 2025/09/10
 # Note  : You should install scipy first.
 
 import numpy as np
@@ -18,19 +18,24 @@ P = np.array([[1/3,    1/3,      0,      0],
                 [2/3,      0,    1/3,    2/3]])
 m,n = P.shape
 
+def stationary_distribution(P: np.ndarray) -> np.ndarray:
+    """
+    stationary distribution vector of stochastic matrix P
+    """
+    eigvals, eigvecs = np.linalg.eig(P)  # right eigenvector
+    index = np.argmax(np.real(eigvals))    # index for eig 1
+
+    eigenvector_for_1 = np.real(eigvecs[:, index])
+    # normalization
+    p_stationary = eigenvector_for_1 / np.sum(eigenvector_for_1)
+    return p_stationary
 
 def figure10_2b(k_bar= 300):
     figsize = config.global_config(type= 1)
     # Figure 10.2 (a) transition probability
     
-    # 固有値と固有ベクトルを計算
-    eigvals, eigvecs = np.linalg.eig(P)
-    index = np.argmax(eigvals)
-    eigenvector_for_1 = eigvecs[:, index]
-    sum_of_elements = np.sum(eigenvector_for_1)
-    p_stationary = eigenvector_for_1 / sum_of_elements
-    print("p_stationary for P^0：")
-    print(p_stationary)
+    p_stationary = stationary_distribution(P)
+    print("p_stationary for P^0：", p_stationary)
 
     # p_stable = np.ones((4,1))/4
     # for _ in range(100):
@@ -39,10 +44,7 @@ def figure10_2b(k_bar= 300):
     
     # accumulated transition probability
     # P_accum(i,j) = Prob(current state = j → next state <= i)
-    P_accum = np.zeros((m,n))
-    P_accum[0,:] = P[0,:]
-    for i in range(1,m):
-        P_accum[i,:]= P_accum[i-1,:]+P[i,:]
+    P_accum = np.cumsum(P, axis=0)
 
     state_list = np.zeros(k_bar, dtype=np.int64) 
     state_list[0] = 4 # start at 4
@@ -95,8 +97,8 @@ def figure10_4(k_bar= 1000, sigma = 1.0):
                             'maxls': 50       
                         }
                     )
-    print("error=",results.fun)
-    print(results.x)
+    print("error:",results.fun)
+    print("V*:",results.x)
     z_opt = np.exp(-beta*results.x) 
     P_opt = np.zeros((m,n))
     for i in range(m):
@@ -105,24 +107,10 @@ def figure10_4(k_bar= 1000, sigma = 1.0):
     
     print("sigma:",sigma, "Ppi:\n", P_opt)
 
-    # 固有値と固有ベクトルを計算
-    eigvals, eigvecs = np.linalg.eig(P_opt)
-    index = np.argmax(eigvals)
-    eigenvector_for_1 = eigvecs[:, index]
-    sum_of_elements = np.sum(eigenvector_for_1)
-    p_stationary = eigenvector_for_1 / sum_of_elements
-    print("p_stationary for P_opt：")
-    print(p_stationary)
+    p_opt_stationary = stationary_distribution(P_opt)
+    print("p_stationary for P_opt：", p_opt_stationary)
 
-    # p_stable = np.ones((4,1))/4
-    # for _ in range(100):
-    #     p_stable =  P_opt@p_stable
-    # print("p^star_100=",p_stable)
-
-    P_accum = np.zeros((m,n))
-    P_accum[0,:] = P_opt[0,:]
-    for i in range(1,m):
-        P_accum[i,:] = P_accum[i-1,:] + P_opt[i,:]
+    P_accum = np.cumsum(P_opt, axis=0)
 
     state_list = np.zeros(k_bar+1,dtype=np.int8) 
     state_list[0] = 4   # start at 4

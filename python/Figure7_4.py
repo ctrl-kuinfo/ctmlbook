@@ -1,16 +1,19 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2025/09/11
 # Note  : pip install cvxpy
 #  (important!!!) You need to install cvxpy first!!!
 
 import numpy as np
 import matplotlib.pyplot as plt
 from cvxpy import Minimize,Variable,Problem
-from cvxpy.atoms import quad_form,norm
+from cvxpy.atoms import norm
 from matplotlib.ticker import MultipleLocator
 import config
 
-np.random.seed(1)
+np.random.seed(10)
+
+n_x = 100;          # n_x - number of x-grid for plot
+x_p = np.linspace(0,1,n_x)  # x grid points for plot
 
 def phi(x:float)->np.ndarray:
     '''
@@ -20,6 +23,7 @@ def phi(x:float)->np.ndarray:
                       x**5, x**6, x**7, x**8, x**9])
 
 n_f = phi(0).size   # number of features
+Phi_p = np.column_stack([phi(xi) for xi in x_p])    # matrix phi for plot
 
 def f_true(x:float)->float:
     '''
@@ -27,59 +31,48 @@ def f_true(x:float)->float:
     '''
     return 2*np.sin(5*x)
 
-def figure7_4(n_data:int=30, n_x:int=100):
+f_real = np.array([f_true(x) for x in x_p])
+
+def figure7_4(sigma_sq = 0.01, s_bar:int=30):
     '''
-        n_x - number of x-grid for plot
-        n_sample - number of data
+        sigma_sq - squared SD
+        s_bar - number of data points
     '''
-    figsize = config.global_config(type= 1)
 
     # generate data from U(0,1)
-    x = np.random.rand(n_data)
-    X = np.zeros([n_f,n_data])
-    y = np.zeros(n_data)
-    for i in range(n_data):
-        X[:,i] = phi(x[i])
-        y[i] = f_true(x[i]) + np.random.randn()
-    X = X.T
+    x = np.linspace(0,1,s_bar)     # x for data
+    Phi = np.column_stack([phi(x_s) for x_s in x])    # matrix phi in (7.10)
+    y = np.array([f_true(x_s) + np.random.randn() for x_s in x])  # noisy observation
 
-    # weight of regularization (= standard deviation^2) 
-    sigma_sq = 0.01
 
     # optimization 1 Naive
 
-    theta = Variable(n_f)
-    obj = Minimize(norm(X @ theta - y))
+    para = Variable(n_f)
+    obj = Minimize(norm(para @ Phi - y))
     prob = Problem(obj)
     prob.solve()
-    theta_naive=theta.value
+    para_naive = para.value
 
     # optimization 2 Lasso
-    theta = Variable(n_f)
-    obj = Minimize(norm(X @ theta - y) ** 2 /n_data+ sigma_sq * norm(theta,1) )
+    para = Variable(n_f)
+    obj = Minimize(norm(para @ Phi - y) ** 2 /s_bar+ sigma_sq * norm(para,1) )
     prob = Problem(obj)
     prob.solve()
-    theta_lasso=theta.value
+    para_lasso = para.value
 
     # optimization 3 Ridge
-    theta = Variable(n_f)
-    obj = Minimize(norm(X @ theta - y) ** 2/n_data + sigma_sq * norm(theta) ** 2)
+    para = Variable(n_f)
+    obj = Minimize(norm(para @ Phi - y) ** 2/s_bar + sigma_sq * norm(para) ** 2)
     prob = Problem(obj)
     prob.solve()
-    theta_ridge=theta.value
+    para_ridge = para.value
 
-    x_p = np.linspace(0,1,n_x)
-    NAIVE_dat = np.zeros(n_x)
-    LASSO_dat = np.zeros(n_x) 
-    RIDGE_dat = np.zeros(n_x)
-    f_real    = np.zeros(n_x)
-    for i in range(n_x):
-        NAIVE_dat[i] = theta_naive.T @ phi(x_p[i])
-        LASSO_dat[i] = theta_lasso.T @ phi(x_p[i])
-        RIDGE_dat[i] = theta_ridge.T @ phi(x_p[i])
-        f_real[i] =  f_true(x_p[i])
+    NAIVE_dat = para_naive @ Phi_p
+    LASSO_dat = para_lasso @ Phi_p
+    RIDGE_dat = para_ridge @ Phi_p
 
     # Figure 7.4(a)
+    figsize = config.global_config(type= 1)
     plt.figure(figsize=figsize)
     plt.scatter(x,y,marker='o',label=r'${\rm y}_s$')
     plt.plot(x_p,NAIVE_dat,'k',linewidth=2,label='Least Square')
@@ -97,8 +90,8 @@ def figure7_4(n_data:int=30, n_x:int=100):
     
     # Figure 7.4(b)
     plt.figure(figsize=figsize)
-    plt.scatter(np.arange(1,n_f+1),np.abs(theta_ridge),marker='x',s=60,clip_on=False,label='Ridge')
-    plt.scatter(np.arange(1,n_f+1),np.abs(theta_lasso),marker='o',s=60,clip_on=False,label='Lasso')
+    plt.scatter(np.arange(1,n_f+1),np.abs(para_ridge),marker='x',s=60,clip_on=False,label='Ridge')
+    plt.scatter(np.arange(1,n_f+1),np.abs(para_lasso),marker='o',s=60,clip_on=False,label='Lasso')
     plt.xlabel(r'$i$')
     # plt.ylabel(r'$i$-th coefficient')
     plt.legend()
@@ -111,4 +104,7 @@ def figure7_4(n_data:int=30, n_x:int=100):
     plt.show()
 
 if __name__ == '__main__':
-    figure7_4(n_data=30, n_x=100)
+    # weight of regularization (= standard deviation^2) 
+    sigma_sq = 0.01
+
+    figure7_4(sigma_sq, s_bar=30)

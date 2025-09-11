@@ -9,18 +9,18 @@ C_vals     = [0.6, 0.6, 1.0, 1.0];
 alpha_vals = [1.0, 0.3, 1.0, 1.5];
 numSettings = numel(C_vals);
 
-% Two simulation lengths: (a) N_k=100, (b) N_k=5000
-N_list = [100, 5000];
+% Two simulation lengths: (a) k_bar=100, (b) k_bar=5000
+k_bar_list = [100, 5000];
 
 for idxFig = 1:2
-    N_k = N_list(idxFig);
-    p_history = zeros(numSettings, N_k+1);
+    k_bar = k_bar_list(idxFig);
+    p_history = zeros(numSettings, k_bar+1);
     p_history(:,1) = 1;  % initial value p(0)=1 for all settings
 
     for s = 1:numSettings
         C = C_vals(s);
         alpha = alpha_vals(s);
-        for k = 1:N_k
+        for k = 1:k_bar
             p_k      = p_history(s,k);
             z_k      = randn;                    % z_k ~ N(0,1)
             p_history(s,k+1) = p_k - C/((k)^alpha) * (p_k - z_k);
@@ -29,7 +29,7 @@ for idxFig = 1:2
 
     % Plot all trajectories in one figure
     figure('Name', sprintf('Figure 11.4(%s)', char('a'+idxFig-1))); hold on; grid on;
-    k_axis = 0:N_k;
+    k_axis = 0:k_bar;
     colors = lines(numSettings);
 
     for s = 1:numSettings
@@ -39,7 +39,7 @@ for idxFig = 1:2
     % Mark initial value at k=0
     scatter(0, 1, 80, 'k', 'filled', 'DisplayName', 'Initial Value');
 
-    xlim([0, N_k]);
+    xlim([0, k_bar]);
     ylim([-2, 2]);
     xlabel('k', 'Interpreter','latex', 'FontSize',14);
     ylabel('$p_k$', 'Interpreter','latex', 'FontSize',14);
