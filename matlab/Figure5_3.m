@@ -1,4 +1,4 @@
-% Author: Kenji Kashima (MATLAB port)
+% Author: Kenji Kashima
 % Date  : 2025/09/01
 % Note  : requires Control System Toolbox
 

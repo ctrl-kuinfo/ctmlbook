@@ -1,11 +1,14 @@
 # Author: Kenji Kashima
-# Date  : 2025/04/01
+# Date  : 2025/09/11
 
 import numpy as np
 import matplotlib.pyplot as plt
 import config
 
 np.random.seed(24)
+
+n_x = 100;          # n_x - number of x-grid for plot
+x_p = np.linspace(0,1,n_x)  # x grid points for plot
 
 def phi(x:float)->np.ndarray:
     '''
@@ -16,7 +19,7 @@ def phi(x:float)->np.ndarray:
                       x**5, x**6, x**7, x**8, x**9 ])
 
 n_f = phi(0).size   # number of features
-
+Phi_p = np.column_stack([phi(xi) for xi in x_p])    # matrix phi for plot
 
 def f_true(x:float)->float:
     '''
@@ -24,24 +27,17 @@ def f_true(x:float)->float:
     '''
     return 2*np.sin(5*x)
 
-def figure7_1a(n_x:int = 100, n_sample:int=20):
+def figure7_1a(n_sample:int=20):
     '''
-        n_x - number of x-grid for plot
         n_sample - number of sample functions
     '''
     figsize = config.global_config(type=1)
-
-    x_p = np.linspace(0,1,n_x)
-    X = np.zeros([n_f,n_x]) 
-    for i in range(n_x):
-        X[:,i] = phi(x_p[i]) 
-
     plt.figure(figsize=figsize)
     plt.plot(x_p, np.zeros_like(x_p), linewidth=3)
 
     for _ in range (n_sample):
-        theta = np.random.randn(n_f)      
-        fx =  theta @ X                 
+        para = np.random.randn(n_f)      
+        fx =  para @ Phi_p                 
         plt.plot(x_p,fx,linewidth= 0.5, color=[0.7,0.7,0.7])    
     
     plt.xlabel(r'$\rm x$')
@@ -52,53 +48,38 @@ def figure7_1a(n_x:int = 100, n_sample:int=20):
     plt.savefig("./Figure7_1a.pdf")
     plt.show()
 
-# learning from observation at n_data points with hyperparameter sigma_sq
-def learn_theta(sigma_sq,n_data):
+
+def figure7_1b(sigma_sq, n_sample:int=20, s_bar:int=8):
     '''
-        sigma_sq - simulation for several weights (=standard deviation)^2
-        n_data - number of data
+        sigma_sq - list of squared SD
+        n_sample - number of sample functions
+        s_bar - number of data
     '''
-    x = np.linspace(0,1,n_data)
-    X = np.zeros([n_f,n_data])
-    y = np.zeros(n_data)
-    for s in range(n_data):
-        X[:,s] = phi(x[s])
-        y[s] = f_true(x[s]) + np.random.randn()
+    
+    x = np.linspace(0,1,s_bar)     # x for data
+    Phi = np.column_stack([phi(x_s) for x_s in x])    # matrix phi in (7.10)
+    y = np.array([f_true(x_s) + np.random.randn() for x_s in x])  # noisy observation
 
     size_sigma_sq = len(sigma_sq)
     mean = np.zeros([n_f,size_sigma_sq])
     cov = np.zeros([n_f,size_sigma_sq*n_f])
 
     for l in range(size_sigma_sq):
-        tmp = np.eye(n_f) - X @ np.linalg.inv(X.T @ X+sigma_sq[l] * np.eye(n_data)) @ X.T
+        tmp = np.eye(n_f) - Phi @ np.linalg.inv(Phi.T @ Phi + sigma_sq[l] * np.eye(s_bar)) @ Phi.T
         cov[:,n_f*l:n_f*(l+1)] = (tmp+tmp.T)/2
-        mean[:,l]  = X @ np.linalg.inv(X.T @ X + sigma_sq[l] * np.eye(n_data)) @ y.T
-    return mean, cov, x, y
+        mean[:,l]  = Phi @ np.linalg.inv(Phi.T @ Phi + sigma_sq[l] * np.eye(s_bar)) @ y.T
 
-def figure7_1b(n_x:int = 100, n_sample:int=20, n_data:int=8):
-    '''
-        n_x - numer of x-grid for plot
-        n_sample - number of sample functions
-        n_data - number of data
-    '''
     figsize = config.global_config(type=1)
-    
-    x_p = np.linspace(0,1,n_x)
-    X = np.zeros([n_f,n_x]) 
-    for i in range(n_x):
-        X[:,i] = phi(x_p[i]) 
-    sigma_sq = [0.25,100,10**(-6)]  # standard deviation sigma = 0.5, 10^3, 10^{-3}
-    mu,Sigma,x,y = learn_theta(sigma_sq,n_data)
-
     plt.figure(figsize=figsize)
 
-    plt.plot(x_p, (mu[:,0] @ X).flatten(), linewidth= 2,label=r'$\sigma=0.5$',zorder=10)
-    plt.plot(x_p, (mu[:,1] @ X).flatten(), linewidth= 2,label=r'$\sigma=10$')
-    plt.plot(x_p, (mu[:,2] @ X).flatten(), linewidth= 2,label=r'$\sigma=10^{-3}$')
+    plt.plot(x_p, (mean[:,0] @ Phi_p).flatten(), linewidth= 2,label=r'$\sigma=0.5$',zorder=10)
+    plt.plot(x_p, (mean[:,1] @ Phi_p).flatten(), linewidth= 2,label=r'$\sigma=10$')
+    plt.plot(x_p, (mean[:,2] @ Phi_p).flatten(), linewidth= 2,label=r'$\sigma=10^{-3}$')
 
+    # Sampling from the posterior
     for _ in range (n_sample):
-        theta = np.random.multivariate_normal(mu[:,0],Sigma[:,0:n_f])      
-        fx =  theta @ X                   
+        para = np.random.multivariate_normal(mean[:,0],cov[:,0:n_f])      
+        fx =  para @ Phi_p                   
         plt.plot(x_p,fx,linewidth= 0.3,color=[0.7,0.7,0.7])
 
     plt.scatter(x,y,marker='o',label=r'${\rm y}_s$')
@@ -113,5 +94,8 @@ def figure7_1b(n_x:int = 100, n_sample:int=20, n_data:int=8):
     plt.show()
 
 if __name__ == '__main__':
-    figure7_1a(n_x=100,n_sample=20)
-    figure7_1b(n_x=100,n_sample=20,n_data=20)
+    figure7_1a(n_sample=20)
+
+    sigma_sq = [0.5, 100, 10**(-6) ]  # standard deviation sigma = 0.5, 10, 10^{-3}
+
+    figure7_1b(sigma_sq, n_sample=20, s_bar=20)

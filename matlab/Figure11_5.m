@@ -39,13 +39,13 @@ xlim([-5, 5]);
 ylim([-5, 7]);
 
 %% Figure 11.5(b): SGD simulation for solving L(p)=0
-N_k = 2000;
+k_bar = 2000;
 C     = [1.0, 1.0, 1.0];      % Step‐size constants
 alpha = [0.4, 0.8, 1.2];      % Decay exponents
 N_setting = numel(C);
 
-p_list = zeros(N_setting, N_k + 1);
-y_list = zeros(N_setting, N_k);
+p_list = zeros(N_setting, k_bar + 1);
+y_list = zeros(N_setting, k_bar);
 
 p_ini = 1;
 p_list(:,1) = p_ini;
@@ -53,7 +53,7 @@ p_list(:,1) = p_ini;
 figure('Name','Figure 11.5(b)'); hold on; grid on;
 
 for setting = 1:N_setting
-    for k = 1:N_k
+    for k = 1:k_bar
         p = p_list(setting, k);
         % Randomly choose ∇L1 or ∇L2 with equal probability
         if rand() < 0.5
@@ -65,7 +65,7 @@ for setting = 1:N_setting
         % Update: p_{k+1} = p_k − (C(setting) / k^alpha(setting)) * y
         p_list(setting, k + 1) = p - C(setting) / (k ^ alpha(setting)) * y;
     end
-    plot(0:N_k, p_list(setting, :), 'LineWidth', 1);
+    plot(0:k_bar, p_list(setting, :), 'LineWidth', 1);
 end
 
 % Initial value marker
@@ -73,10 +73,10 @@ plot(0, p_ini, 'ko', 'MarkerFaceColor', 'k', 'MarkerSize', 6, 'DisplayName', 'In
 
 xlabel('$k$','Interpreter','latex','FontSize',18);
 ylabel('$p_{k}$','Interpreter','latex','FontSize',18);
-xlim([0, N_k]);
+xlim([0, k_bar]);
 ylim([-2, 2]);
 
-% Legend labels with matching significant digits
+% Legend labels 
 legend_labels = cell(1, N_setting + 1);
 for idx = 1:N_setting
     legend_labels{idx} = sprintf('$C=%.1f,\\ \\alpha=%.1f$', C(idx), alpha(idx));
