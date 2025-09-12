@@ -19,10 +19,13 @@ end
 % true function (for reference curve)
 f_real = arrayfun(@(x) f_true(x), x_p);
 
-% weight of regularization (= standard deviation^2)
+% weight of regularization (= observation noise covariance) 
 sigma_sq = 0.01;
 
-figure7_4(sigma_sq, 30, x_p, Phi_p, f_real, n_f);
+% number of data points
+s_bar = 30;
+
+figure7_4(sigma_sq, s_bar, x_p, Phi_p, f_real, n_f);
 
 % ------------------------ helpers ------------------------
 
@@ -66,21 +69,20 @@ function figure7_4(sigma_sq, s_bar, x_p, Phi_p, f_real, n_f)
     para_naive = quadprog(H_ls, f_ls, [], [], [], [], [], [], [], opts);
 
     % ---------------- optimization 2: Lasso ----------------
-    % min (1/s_bar)||A x - b||^2 + sigma_sq * ||x||_1
+    % min ||A x - b||^2 + sigma_sq * ||x||_1
     % 変数分割 x = u - v,  u>=0, v>=0
-    % 目的：(1/s)*(u-v)'A'A(u-v) - (2/s) b'A(u-v) + sigma*(1'u + 1'v)
+    % 目的：(u-v)'A'A(u-v) - 2 b'A(u-v) + sigma*(1'u + 1'v)
     % → z = [u; v] に対して
-    % H = (2/s) [Q, -Q; -Q, Q],  f = [ -2/s*A'*b + sigma*1;  2/s*A'*b + sigma*1 ]
+    % H = 2 [Q, -Q; -Q, Q],  f = [ -2*A'*b + sigma*1;  2*A'*b + sigma*1 ]
     Q   = A.'*A;                   % (n_f × n_f)
     c   = A.'*b;                   % (n_f × 1)
-    s   = s_bar;
 
-    H11 = (2/s)*Q;  H12 = -(2/s)*Q;
-    H21 = -(2/s)*Q; H22 = (2/s)*Q;
+    H11 = 2*Q;  H12 = -2*Q;
+    H21 = -2*Q; H22 = 2*Q;
     H_lasso = [H11, H12; H21, H22];
 
-    f1 = (-2/s)*c + sigma_sq*ones(n_f,1);
-    f2 = ( 2/s)*c + sigma_sq*ones(n_f,1);
+    f1 = -2*c + sigma_sq*ones(n_f,1);
+    f2 = 2*c + sigma_sq*ones(n_f,1);
     f_lasso = [f1; f2];
 
     lb = zeros(2*n_f,1);  ub = [];   % u>=0, v>=0
@@ -90,10 +92,10 @@ function figure7_4(sigma_sq, s_bar, x_p, Phi_p, f_real, n_f)
     para_lasso = u - v;
 
     % ---------------- optimization 3: Ridge ----------------
-    % min (1/s)||A x - b||^2 + sigma_sq * ||x||^2
-    % 1/2 x'( 2/s A'A + 2*sigma I ) x  +  ( -2/s A'b )' x
-    H_ridge = (2/s)*(A.'*A) + 2*sigma_sq*eye(n_f);
-    f_ridge = -(2/s)*(A.'*b);
+    % min ||A x - b||^2 + sigma_sq * ||x||^2
+    % 1/2 x'( 2 A'A + 2*sigma I ) x  +  ( -2 A'b )' x
+    H_ridge = 2*(A.'*A) + 2*sigma_sq*eye(n_f);
+    f_ridge = -2*(A.'*b);
     para_ridge = quadprog(H_ridge, f_ridge, [], [], [], [], [], [], [], opts);
 
     NAIVE_dat = (para_naive.' * Phi_p).';
