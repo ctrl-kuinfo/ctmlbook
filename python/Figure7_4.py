@@ -10,7 +10,7 @@ from cvxpy.atoms import norm
 from matplotlib.ticker import MultipleLocator
 import config
 
-np.random.seed(10)
+np.random.seed(5)
 
 n_x = 100;          # n_x - number of x-grid for plot
 x_p = np.linspace(0,1,n_x)  # x grid points for plot
@@ -55,14 +55,14 @@ def figure7_4(sigma_sq = 0.01, s_bar:int=30):
 
     # optimization 2 Lasso
     para = Variable(n_f)
-    obj = Minimize(norm(para @ Phi - y) ** 2 /s_bar+ sigma_sq * norm(para,1) )
+    obj = Minimize(norm(para @ Phi - y) ** 2 + sigma_sq * norm(para,1) )
     prob = Problem(obj)
     prob.solve()
     para_lasso = para.value
 
     # optimization 3 Ridge
     para = Variable(n_f)
-    obj = Minimize(norm(para @ Phi - y) ** 2/s_bar + sigma_sq * norm(para) ** 2)
+    obj = Minimize(norm(para @ Phi - y) ** 2 + sigma_sq * norm(para) ** 2)
     prob = Problem(obj)
     prob.solve()
     para_ridge = para.value
@@ -104,7 +104,7 @@ def figure7_4(sigma_sq = 0.01, s_bar:int=30):
     plt.show()
 
 if __name__ == '__main__':
-    # weight of regularization (= standard deviation^2) 
+    # weight of regularization (= observation noise covariance) 
     sigma_sq = 0.01
 
     figure7_4(sigma_sq, s_bar=30)
