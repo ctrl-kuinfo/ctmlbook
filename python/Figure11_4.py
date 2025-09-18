@@ -28,7 +28,7 @@ def figure11_4(N_k= 100,label="a"):
             p = p_list[setting,k]
             z = np.random.randn()   # sampling of z_k 
             y_list[setting,k] = p - z   # Fig 11.4   
-            # y_list[setting,i] = ( p > z ) - 0.5    # 演習 11.3 
+            # y_list[setting,i] = ( p > z ) - 0.5    # 演習 11.5 
             p_list[setting,k+1] = p - C[setting]/((k+1)**alpha[setting]) * y_list[setting,k]
         plt.plot(p_list[setting,:],label=r"$C={}, \alpha={}$".format(C[setting],alpha[setting]))
 

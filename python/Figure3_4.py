@@ -10,7 +10,7 @@ import config
 np.random.seed(1)
 
 def create_noise_model(Ts):
-    # --- 1. Noise Model Normalization ---
+    # --- 1. Noise Model time discretization ---
     # Continuous-time noise model F = 1/(s+0.3)
     s = control.TransferFunction.s
     F_c = 1 / (s + 0.3)

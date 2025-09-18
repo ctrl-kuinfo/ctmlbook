@@ -6,29 +6,30 @@ function figure11_1(label)
     % Define parameters
     A = [1, 0.1; -0.3, 1];  % State matrix
     B = [0.7; 0.4];         % Control matrix
-    W = 0.1 * eye(2);      % Noise covariance matrix
+    N = 0.1 * eye(2);      % Noise covariance matrix
+    [x_dim, u_dim] = size(B);
+    Sigma_0 = 3 * eye(x_dim);  % Initial covariance
     Sigma_10 = [2, 0; 0, 0.5];  % Target covariance
-    [n, m] = size(B);
     k_bar = 10;  % Time horizon
 
     % Define optimization variables
     Sigma = cell(k_bar + 1, 1);
     for k = 1:k_bar + 1
-        Sigma{k} = sdpvar(n, n, 'symmetric');  % Sigma_k, k=0 to k_bar
+        Sigma{k} = sdpvar(x_dim, x_dim, 'symmetric');  % Sigma_k, k=0 to k_bar
     end
     
     P = cell(k_bar, 1);
     for k = 1:k_bar
-        P{k} = sdpvar(n, m);  % P_k, k=0 to k_bar-1
+        P{k} = sdpvar(x_dim, u_dim);  % P_k, k=0 to k_bar-1
     end
     
     M = cell(k_bar, 1);
     for k = 1:k_bar
-        M{k} = sdpvar(m, m, 'symmetric');  % M_k, k=0 to k_bar-1, non-negative
+        M{k} = sdpvar(u_dim, u_dim, 'symmetric');  % M_k, k=0 to k_bar-1, non-negative
     end
 
     % Initial and terminal conditions
-    Constraints = [Sigma{1} == 3 * eye(n)];  % Sigma_0 = 3 * I
+    Constraints = [Sigma{1} == Sigma_0];  % Sigma_0 
     Constraints = [Constraints, Sigma{k_bar + 1} == Sigma_10];  % Sigma_10
     if ~strcmp(label, "a")
         Constraints = [Constraints, Sigma{6}(2, 2) <= 0.5];
@@ -36,9 +37,9 @@ function figure11_1(label)
 
     % Recurrence relation constraints
     for k = 1:k_bar
-        % Sigma_{k+1} = A * Sigma_k * A' + A * P_k * B' + B * P_k' * A' + B * M_k * B' + W
-        Sigma_next = A * Sigma{k} * A' + A * P{k} * B' + B * P{k}' * A' + B * M{k} * B' + W;
-        Sigma_next = 0.5*(Sigma_next + Sigma_next');   % ★これ必須
+        % Sigma_{k+1} = A * Sigma_k * A' + A * P_k * B' + B * P_k' * A' + B * M_k * B' + N
+        Sigma_next = A * Sigma{k} * A' + A * P{k} * B' + B * P{k}' * A' + B * M{k} * B' + N;
+        Sigma_next = 0.5*(Sigma_next + Sigma_next');  
         Constraints = [Constraints, Sigma{k + 1} == Sigma_next];
 
         % Semi-definite constraint: [Sigma_k, P_k; P_k', M_k] >= 0
@@ -57,6 +58,8 @@ function figure11_1(label)
 
     % Check feasibility and output results
     if sol.problem == 0  % Successfully solved
+        opt_value = value(Objective)
+
         Sigma_optimal = cellfun(@(x) value(x), Sigma, 'UniformOutput', false);
         P_optimal = cellfun(@(x) value(x), P, 'UniformOutput', false);
         % M_optimal = cellfun(@(x) value(x), M, 'UniformOutput', false);
@@ -67,12 +70,12 @@ function figure11_1(label)
 
         for j = 1:num_trajectories
             % Generate random initial state x_0 ~ N(0, 3I)
-            x = mvnrnd(zeros(1, n), 3*eye(n)).';   
+            x = mvnrnd(zeros(1, x_dim), Sigma_0).';   
             trajectory = x.';                      
             
             for k = 1:k_bar
                 K_k = (Sigma_optimal{k} \ P_optimal{k}).';  
-                v_k = mvnrnd(zeros(1, n), W).';            
+                v_k = mvnrnd(zeros(1, x_dim), N).';            
             
                 u_k = K_k * x;                              
                 x    = A * x + B * u_k + v_k;               
@@ -96,7 +99,7 @@ function figure11_1(label)
             plot3(ones(numel(x),1) * (k-1), x, y, 'LineWidth', 1.2, 'Color', [0.3 0.3 0.3]);
         end
         
-        Sigma_optimal{6}(2,2)
+        fprintf("Sigma_5(2,2) = %.6f\n", Sigma_optimal{6}(2,2));
 
         xlabel('$k$', 'Interpreter', 'latex', 'FontSize', 12);
         ylabel('$(x)_1$', 'Interpreter', 'latex', 'FontSize', 12);
