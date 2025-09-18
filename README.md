@@ -18,7 +18,7 @@
 
 ### 正誤表および補足情報
 
-- [pdfファイル](https://www.bode.amp.i.kyoto-u.ac.jp/) *ver2025.4.1*
+- [.mdファイル](./errata.md) *ver2025.4.1*
 
 ### 数値計算コード
 
