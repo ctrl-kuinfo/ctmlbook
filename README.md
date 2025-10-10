@@ -31,7 +31,8 @@
 
 ### スライド
 
-各章の概要を３０ページ程度にまとめたスライドです。読書、セミナーなどにご利用下さい。（講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、お名前、ご所属、用途をご連絡ください）
-[一覧](https://github.com/ctrl-kuinfo/ctml-book/tree/main/slides)
+独学用の俯瞰図およびセミナー資料として、各章の概要を整理したスライドです。講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、お名前、ご所属、用途をご連絡ください。
+
+- [一覧](https://github.com/ctrl-kuinfo/ctml-book/tree/main/slides)
 
 ---
