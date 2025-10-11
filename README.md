@@ -4,11 +4,14 @@
 - 出版社　森北出版  
 - 出版年　2025年
 - ISBN　978-4-627-61481-9
-- 目次 [.mdファイル](./TOC.md)
 - 引用情報  
-> 加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
-> Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
-<img src="https://www.morikita.co.jp/storage/images/cvr/061481cvr.jpg" width="200">
+加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
+Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
+- 目次　[一覧](./TOC.md)
+
+<img src="https://www.morikita.co.jp/storage/images/cvr/061481cvr.jpg" width="200">   <img src="./chapters.png" width="400">
+
+  
 
 ---
 
