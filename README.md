@@ -28,13 +28,13 @@ Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Moriki
 書籍内の数値計算を計算機実装した簡易コードです。可視化による理解の促進を目的として定理などをベタ打ちしたもので、高速化などは考慮しておりません。
 書籍内の図は、Python版の実行結果です。
 
-- Matlab [.mファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/matlab.zip) *ver2025.9.11*　※ MATLAB Onlineで実行可能（Figure 11_1 のみ要sedumiなど）
+- Matlab [.mファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/matlab.zip) *ver2025.9.11*　※ MATLAB Onlineでも実行可能（Figure 11_1 のみ要sedumiなど）
 
 - Python [.pyファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/python.zip) *ver2025.9.11*　※ 単独で実行可能（config.pyのみ描画設定ファイル）
 
 ### スライド
 
-独学用の俯瞰図およびセミナー資料として、各章の概要を整理したスライドです。講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、お名前、ご所属、用途をご連絡ください。
+独学用ロードマップやセミナー資料を想定して、各章の概要を整理したスライドです。講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、お名前、ご所属、用途をご連絡ください。
 
 - [一覧](https://github.com/ctrl-kuinfo/ctml-book/tree/main/slides)
 
