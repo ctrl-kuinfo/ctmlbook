@@ -21,15 +21,15 @@ Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Moriki
 
 ### 正誤表および補足情報
 
-- [.mdファイル](./errata.md) *ver2025.4.1*
+- [一覧](./errata.md)
 
 ### 数値計算コード
 
-書籍内の数値計算を計算機実装した簡易コードです。可視化による理解の促進を目的として定理などをベタ打ちしたもので、高速化などは考慮しておりません。
+書籍内の数値計算に用いた簡易コードです。可視化による理解の促進を目的として定理などをベタ打ちしたもので、高速化などは考慮しておりません。
 
-- Matlab [.mファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/matlab.zip) *ver2025.9.11*　※ MATLAB Onlineでも実行可能（Figure 11_1 のみ要sedumiなど）
+- Matlab [.mファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/matlab.zip) ※ MATLAB Onlineでも実行可能（Figure 11_1 のみ要sedumiなど）
 
-- Python [.pyファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/python.zip) *ver2025.9.11*　※ 単独で実行可能（config.pyのみ描画設定ファイル）
+- Python [.pyファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/python.zip) ※ 単独で実行可能（config.pyのみ描画設定ファイル）
 
 ### スライド
 
