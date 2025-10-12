@@ -26,7 +26,6 @@ Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Moriki
 ### 数値計算コード
 
 書籍内の数値計算を計算機実装した簡易コードです。可視化による理解の促進を目的として定理などをベタ打ちしたもので、高速化などは考慮しておりません。
-書籍内の図は、Python版の実行結果です。
 
 - Matlab [.mファイル一式(zip)](https://github.com/ctrl-kuinfo/ctml-book/raw/refs/heads/main/matlab.zip) *ver2025.9.11*　※ MATLAB Onlineでも実行可能（Figure 11_1 のみ要sedumiなど）
 
