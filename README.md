@@ -34,8 +34,12 @@ Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Moriki
 
 ### スライド
 
-独学用ロードマップやセミナー資料を想定して、各章の概要を整理したスライドです。講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、お名前、ご所属、用途をご連絡ください。
+独学用ロードマップやセミナー資料を想定して、各章の概要を整理したスライドです。講義などのためにLaTeX(beamer)のソースファイルをご希望の方は、フィードバック用のフォームより、お名前、ご所属、用途をご連絡ください。
 
 - [一覧](https://github.com/ctrl-kuinfo/ctml-book/tree/main/slides)
 
 ---
+
+### フィードバック
+
+- [フォーム](https://forms.gle/7HsvDCpM9HxijZ9a8)
