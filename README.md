@@ -7,7 +7,7 @@
 - 引用情報  
 加嶋 健司，システム制御理論と統計的機械学習，森北出版，2025  
 Kenji Kashima, *Systems Control Theory and Statistical Machine Learning*, Morikita Publishing Co., Ltd., 2025
-- 目次　[一覧](./TOC.md)
+- 目次　[一覧](./TOC.md)，[まえがき](https://note.com/morikita/n/necd5dff91e69)
 
 <img src="https://www.morikita.co.jp/storage/images/cvr/061481cvr.jpg" width="200">   <img src="./chapters.png" width="400">
 
